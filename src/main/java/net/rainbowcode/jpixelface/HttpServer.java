@@ -26,13 +26,9 @@ import io.netty.handler.logging.LoggingHandler;
 import net.rainbowcode.jpixelface.skin.SkinFetcherThread;
 import net.rainbowcode.jpixelface.uuid.UUIDFetcherThread;
 
-/**
- * An HTTP server that sends back the content of the received HTTP request
- * in a pretty plaintext form.
- */
 public final class HttpServer {
 
-    static final int PORT = 8080;
+    static final int PORT = 8000;
     static final UUIDFetcherThread UUID_FETCHER_THREAD = new UUIDFetcherThread();
     static final SkinFetcherThread SKIN_FETCHER_THREAD = new SkinFetcherThread();
 
