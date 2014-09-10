@@ -19,7 +19,7 @@ import static io.netty.handler.codec.http.HttpHeaders.Names.CONTENT_TYPE;
 import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
 
 public class HttpUtil {
-    public static String get(String url) throws IOException {
+    public static HttpStringResponse get(String url) throws IOException {
         URL obj = new URL(url);
 
         HttpURLConnection con = (HttpURLConnection) obj.openConnection();
@@ -44,7 +44,7 @@ public class HttpUtil {
 
         in.close();
 
-        return response.toString();
+        return new HttpStringResponse(response.toString(), responseCode);
     }
 
     public static byte[] getAsBytes(String url) throws IOException {

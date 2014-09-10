@@ -4,6 +4,7 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.sk89q.squirrelid.util.UUIDs;
+import net.rainbowcode.jpixelface.HttpStringResponse;
 import net.rainbowcode.jpixelface.HttpUtil;
 
 import java.io.IOException;
@@ -11,6 +12,7 @@ import java.util.UUID;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
+import static io.netty.handler.codec.http.HttpResponseStatus.INTERNAL_SERVER_ERROR;
 import static io.netty.handler.codec.http.HttpResponseStatus.NOT_FOUND;
 
 public class UUIDFetcherThread extends Thread {
@@ -33,15 +35,20 @@ public class UUIDFetcherThread extends Thread {
                 boolean found = false;
                 UUID uuid;
                 if (uuidCache.get(pop.getName().toLowerCase()) == null) {
-                    String response = HttpUtil.get("https://api.mojang.com/users/profiles/minecraft/" + pop.getName().toLowerCase());
+                    HttpStringResponse response = HttpUtil.get("https://api.mojang.com/users/profiles/minecraft/" + pop.getName().toLowerCase());
+                    String string = response.getResponse();
                     JsonParser parser = new JsonParser();
-                    JsonElement parse = parser.parse(response);
-                    if (parse != null) {
-                        JsonObject object = parse.getAsJsonObject();
-                        uuid = UUID.fromString(UUIDs.addDashes(object.getAsJsonPrimitive("id").getAsString()));
-                        uuidCache.put(pop.getName().toLowerCase(), uuid);
-                    } else {
+                    if (response.getCode() != 200) {
                         uuid = null;
+                    } else {
+                        JsonElement parse = parser.parse(string);
+                        if (parse != null) {
+                            JsonObject object = parse.getAsJsonObject();
+                            uuid = UUID.fromString(UUIDs.addDashes(object.getAsJsonPrimitive("id").getAsString()));
+                            uuidCache.put(pop.getName().toLowerCase(), uuid);
+                        } else {
+                            uuid = null;
+                        }
                     }
                 } else {
                     uuid = uuidCache.get(pop.getName().toLowerCase());
@@ -59,7 +66,8 @@ public class UUIDFetcherThread extends Thread {
                 if (!found) {
                     sleep(1000);
                 }
-            } catch (IOException | InterruptedException e) {
+            } catch (Exception e) {
+                HttpUtil.sendError(pop.getRunnable().getCtx(), INTERNAL_SERVER_ERROR);
                 e.printStackTrace();
             }
 

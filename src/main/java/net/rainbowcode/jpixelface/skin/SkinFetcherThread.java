@@ -6,6 +6,7 @@ import com.google.gson.JsonParser;
 import io.netty.buffer.ByteBuf;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import io.netty.handler.codec.http.FullHttpResponse;
+import net.rainbowcode.jpixelface.HttpStringResponse;
 import net.rainbowcode.jpixelface.HttpUtil;
 import org.imgscalr.Scalr;
 
@@ -25,6 +26,7 @@ import java.util.concurrent.Executors;
 
 import static io.netty.handler.codec.http.HttpHeaders.Names.CONTENT_LENGTH;
 import static io.netty.handler.codec.http.HttpHeaders.Names.CONTENT_TYPE;
+import static io.netty.handler.codec.http.HttpResponseStatus.INTERNAL_SERVER_ERROR;
 import static io.netty.handler.codec.http.HttpResponseStatus.OK;
 import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
 
@@ -51,75 +53,91 @@ public class SkinFetcherThread extends Thread {
                 boolean found = false;
                 byte[] skin;
                 byte[] cache = skinCache.get(pop.getUuid());
+                boolean error = false;
                 if (cache == null) {
-                    String response = HttpUtil.get(url);
+                    HttpStringResponse response = HttpUtil.get(url);
+                    String string = response.getResponse();
 
-                    JsonParser parser = new JsonParser();
-                    JsonObject object = parser.parse(response).getAsJsonObject();
-                    JsonArray properties = object.getAsJsonArray("properties");
-                    JsonObject textures = properties.get(0).getAsJsonObject();
-                    String value = textures.get("value").getAsString();
-                    String decoded = new String(Base64.getDecoder().decode(value), "UTF-8");
-                    JsonObject parse = parser.parse(decoded).getAsJsonObject();
-                    String skinUrl = parse.getAsJsonObject("textures").getAsJsonObject("SKIN").getAsJsonPrimitive("url").getAsString();
-                    skin = HttpUtil.getAsBytes(skinUrl);
+                    if (response.getCode() != 200) {
+                        skin = null;
+                        error = true;
+                    } else {
+                        JsonParser parser = new JsonParser();
+                        JsonObject object = parser.parse(string).getAsJsonObject();
+                        JsonArray properties = object.getAsJsonArray("properties");
+                        JsonObject textures = properties.get(0).getAsJsonObject();
+                        String value = textures.get("value").getAsString();
+                        String decoded = new String(Base64.getDecoder().decode(value), "UTF-8");
+                        JsonObject parse = parser.parse(decoded).getAsJsonObject();
+                        String skinUrl = parse.getAsJsonObject("textures").getAsJsonObject("SKIN").getAsJsonPrimitive("url").getAsString();
+                        skin = HttpUtil.getAsBytes(skinUrl);
+                    }
                 } else {
                     skin = cache;
                     found = true;
                 }
-                if (!found) {
-                    skinCache.put(pop.getUuid(), skin);
-                }
-                executor.execute(new SkinMutator(skin) {
-                    @Override
-                    public void run() {
-                        try {
-                            byte[] newSkin = getSkin();
-                            if (!pop.getMutate().equals(Mutate.NONE)) {
-                                InputStream in = new ByteArrayInputStream(newSkin);
-                                BufferedImage bImageFromConvert = ImageIO.read(in);
-                                in.close();
-
-                                if (pop.getMutate().equals(Mutate.AVATAR)) {
-                                    bImageFromConvert = Scalr.crop(bImageFromConvert, 8, 8, 8, 8);
-                                    bImageFromConvert = Scalr.resize(bImageFromConvert, Scalr.Method.SPEED, pop.getSize());
-                                } else if (pop.getMutate().equals(Mutate.HELM)) {
-                                    bImageFromConvert = getHealm(bImageFromConvert);
-                                    bImageFromConvert = Scalr.resize(bImageFromConvert, Scalr.Method.SPEED, pop.getSize());
-                                } else if (pop.getMutate().equals(Mutate.BODY) || pop.getMutate().equals(Mutate.BODY_NOLAYER)) {
-                                    bImageFromConvert = getBody(bImageFromConvert, pop.getMutate().equals(Mutate.BODY_NOLAYER));
-                                    bImageFromConvert = Scalr.resize(bImageFromConvert, Scalr.Method.SPEED, 18 * pop.getSize(), 32 * pop.getSize());
-                                } else if (pop.getMutate().equals(Mutate.TORSO) ||  pop.getMutate().equals(Mutate.TORSO_NOLAYER)) {
-                                    BufferedImage body = getBody(bImageFromConvert, pop.getMutate().equals(Mutate.TORSO_NOLAYER));
-                                    body = Scalr.crop(body, 1, 0, 17, 20);
-                                    bImageFromConvert = Scalr.resize(body, Scalr.Method.SPEED, 18 * pop.getSize(), 20 * pop.getSize());
-                                    body.flush();
-                                } else if (pop.getMutate().equals(Mutate.BUST) || pop.getMutate().equals(Mutate.BUST_NOLAYER)) {
-                                    BufferedImage body = getBody(bImageFromConvert, pop.getMutate().equals(Mutate.BUST_NOLAYER));
-                                    body = Scalr.crop(body, 1, 0, 16, 16);
-                                    bImageFromConvert = Scalr.resize(body, Scalr.Method.SPEED, pop.getSize());
-                                    body.flush();
-                                }
-
-                                ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                                ImageIO.write(bImageFromConvert, "png", baos);
-                                baos.flush();
-                                newSkin = baos.toByteArray();
-                                baos.close();
-                                bImageFromConvert.flush();
-                            }
-
-                            ByteBuf buf = pop.getCtx().alloc().directBuffer(newSkin.length + 1);
-                            buf.writeBytes(newSkin);
-                            FullHttpResponse httpResponse = new DefaultFullHttpResponse(HTTP_1_1, OK, buf);
-                            httpResponse.headers().set(CONTENT_TYPE, "image/png");
-                            httpResponse.headers().set(CONTENT_LENGTH, httpResponse.content().readableBytes());
-                            pop.getCtx().writeAndFlush(httpResponse);
-                        } catch (IOException e) {
-                            e.printStackTrace();
-                        }
+                if (!error) {
+                    if (!found && skin != null) {
+                        skinCache.put(pop.getUuid(), skin);
                     }
-                });
+
+                    if (skin != null) {
+                        executor.execute(new SkinMutator(skin) {
+                            @Override
+                            public void run() {
+                                try {
+                                    byte[] newSkin = getSkin();
+                                    if (!pop.getMutate().equals(Mutate.NONE)) {
+                                        InputStream in = new ByteArrayInputStream(newSkin);
+                                        BufferedImage bImageFromConvert = ImageIO.read(in);
+                                        in.close();
+
+                                        if (pop.getMutate().equals(Mutate.AVATAR)) {
+                                            bImageFromConvert = Scalr.crop(bImageFromConvert, 8, 8, 8, 8);
+                                            bImageFromConvert = Scalr.resize(bImageFromConvert, Scalr.Method.SPEED, pop.getSize());
+                                        } else if (pop.getMutate().equals(Mutate.HELM)) {
+                                            bImageFromConvert = getHealm(bImageFromConvert);
+                                            bImageFromConvert = Scalr.resize(bImageFromConvert, Scalr.Method.SPEED, pop.getSize());
+                                        } else if (pop.getMutate().equals(Mutate.BODY) || pop.getMutate().equals(Mutate.BODY_NOLAYER)) {
+                                            bImageFromConvert = getBody(bImageFromConvert, pop.getMutate().equals(Mutate.BODY_NOLAYER));
+                                            bImageFromConvert = Scalr.resize(bImageFromConvert, Scalr.Method.SPEED, 18 * pop.getSize(), 32 * pop.getSize());
+                                        } else if (pop.getMutate().equals(Mutate.TORSO) || pop.getMutate().equals(Mutate.TORSO_NOLAYER)) {
+                                            BufferedImage body = getBody(bImageFromConvert, pop.getMutate().equals(Mutate.TORSO_NOLAYER));
+                                            body = Scalr.crop(body, 1, 0, 17, 20);
+                                            bImageFromConvert = Scalr.resize(body, Scalr.Method.SPEED, 18 * pop.getSize(), 20 * pop.getSize());
+                                            body.flush();
+                                        } else if (pop.getMutate().equals(Mutate.BUST) || pop.getMutate().equals(Mutate.BUST_NOLAYER)) {
+                                            BufferedImage body = getBody(bImageFromConvert, pop.getMutate().equals(Mutate.BUST_NOLAYER));
+                                            body = Scalr.crop(body, 1, 0, 16, 16);
+                                            bImageFromConvert = Scalr.resize(body, Scalr.Method.SPEED, pop.getSize());
+                                            body.flush();
+                                        }
+
+                                        ByteArrayOutputStream baos = new ByteArrayOutputStream();
+                                        ImageIO.write(bImageFromConvert, "png", baos);
+                                        baos.flush();
+                                        newSkin = baos.toByteArray();
+                                        baos.close();
+                                        bImageFromConvert.flush();
+                                    }
+
+                                    ByteBuf buf = pop.getCtx().alloc().directBuffer(newSkin.length + 1);
+                                    buf.writeBytes(newSkin);
+                                    FullHttpResponse httpResponse = new DefaultFullHttpResponse(HTTP_1_1, OK, buf);
+                                    httpResponse.headers().set(CONTENT_TYPE, "image/png");
+                                    httpResponse.headers().set(CONTENT_LENGTH, httpResponse.content().readableBytes());
+                                    pop.getCtx().writeAndFlush(httpResponse);
+                                } catch (IOException e) {
+                                    e.printStackTrace();
+                                }
+                            }
+                        });
+                    } else {
+                        HttpUtil.sendError(pop.getCtx(), INTERNAL_SERVER_ERROR);
+                    }
+                } else {
+                    HttpUtil.sendError(pop.getCtx(), INTERNAL_SERVER_ERROR);
+                }
 
                 if (!found) {
                     try {
@@ -129,7 +147,8 @@ public class SkinFetcherThread extends Thread {
                     }
                 }
 
-            } catch (IOException e) {
+            } catch (Exception e) {
+                HttpUtil.sendError(pop.getCtx(), INTERNAL_SERVER_ERROR);
                 e.printStackTrace();
             }
 
