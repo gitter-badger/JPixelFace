@@ -6,6 +6,7 @@ import com.google.gson.JsonParser;
 import com.sk89q.squirrelid.util.UUIDs;
 import net.rainbowcode.jpixelface.HttpStringResponse;
 import net.rainbowcode.jpixelface.HttpUtil;
+import net.rainbowcode.jpixelface.TimedConcurrentCache;
 
 import java.io.IOException;
 import java.util.UUID;
@@ -17,7 +18,7 @@ import static io.netty.handler.codec.http.HttpResponseStatus.NOT_FOUND;
 
 public class UUIDFetcherThread extends Thread {
     public ConcurrentLinkedQueue<UUIDFetchJob> queue = new ConcurrentLinkedQueue<>();
-    private ConcurrentHashMap<String, UUID> uuidCache = new ConcurrentHashMap<>();
+    private TimedConcurrentCache<String, UUID> uuidCache = new TimedConcurrentCache<>(86400000L);
 
     @Override
     public void run() {

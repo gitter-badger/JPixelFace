@@ -9,6 +9,7 @@ import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import io.netty.handler.codec.http.FullHttpResponse;
 import net.rainbowcode.jpixelface.HttpStringResponse;
 import net.rainbowcode.jpixelface.HttpUtil;
+import net.rainbowcode.jpixelface.TimedConcurrentCache;
 import org.apache.commons.io.IOUtils;
 import org.imgscalr.Scalr;
 
@@ -31,7 +32,7 @@ import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
 
 public class SkinFetcherThread extends Thread {
     public ConcurrentLinkedQueue<SkinFetchJob> queue = new ConcurrentLinkedQueue<>();
-    private ConcurrentHashMap<UUID, byte[]> skinCache = new ConcurrentHashMap<>();
+    private TimedConcurrentCache<UUID, byte[]> skinCache = new TimedConcurrentCache<>(86400000L);
     private ExecutorService executor = Executors.newCachedThreadPool();
 
     @Override
