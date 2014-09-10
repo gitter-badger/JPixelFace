@@ -8,13 +8,10 @@ import net.rainbowcode.jpixelface.HttpStringResponse;
 import net.rainbowcode.jpixelface.HttpUtil;
 import net.rainbowcode.jpixelface.TimedConcurrentCache;
 
-import java.io.IOException;
 import java.util.UUID;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ConcurrentLinkedQueue;
 
 import static io.netty.handler.codec.http.HttpResponseStatus.INTERNAL_SERVER_ERROR;
-import static io.netty.handler.codec.http.HttpResponseStatus.NOT_FOUND;
 
 public class UUIDFetcherThread extends Thread {
     public ConcurrentLinkedQueue<UUIDFetchJob> queue = new ConcurrentLinkedQueue<>();
@@ -56,13 +53,11 @@ public class UUIDFetcherThread extends Thread {
                     found = true;
                 }
 
-                if (uuid != null) {
-                    UUIDFetchRunnable runnable = pop.getRunnable();
-                    runnable.setUuid(uuid);
-                    runnable.run();
-                } else {
-                    HttpUtil.sendError(pop.getRunnable().getCtx(), NOT_FOUND);
-                }
+
+                UUIDFetchRunnable runnable = pop.getRunnable();
+                runnable.setUuid(uuid);
+                runnable.run();
+
 
                 if (!found) {
                     sleep(1000);
