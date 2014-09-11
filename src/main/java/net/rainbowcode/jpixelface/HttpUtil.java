@@ -21,7 +21,7 @@ import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
 public class HttpUtil {
     public static HttpStringResponse get(String url) throws IOException {
         URL obj = new URL(url);
-
+        HttpServer.LOGGER.info("Sending 'GET' request to URL : {}", url);
         HttpURLConnection con = (HttpURLConnection) obj.openConnection();
 
         // optional default is GET
@@ -30,8 +30,8 @@ public class HttpUtil {
         //add request header
         con.setRequestProperty("User-Agent", "jPixelFace dev");
         int responseCode = con.getResponseCode();
-        System.out.println("\nSending 'GET' request to URL : " + url);
-        System.out.println("Response Code : " + responseCode);
+        HttpServer.LOGGER.info("Request to url finished: {} - Response code: {}", url, responseCode);
+
         BufferedReader in = new BufferedReader(
                 new InputStreamReader(con.getInputStream()));
         String inputLine;
@@ -49,7 +49,7 @@ public class HttpUtil {
 
     public static byte[] getAsBytes(String url) throws IOException {
         URL obj = new URL(url);
-
+        HttpServer.LOGGER.info("Sending 'GET' request to URL : {}", url);
         HttpURLConnection con = (HttpURLConnection) obj.openConnection();
 
         // optional default is GET
@@ -59,8 +59,7 @@ public class HttpUtil {
         con.setRequestProperty("User-Agent", "jPixelFace dev");
 
         int responseCode = con.getResponseCode();
-        System.out.println("\nSending 'GET' request to URL : " + url);
-        System.out.println("Response Code : " + responseCode);
+        HttpServer.LOGGER.info("Request to url finished: {} - Response code: {}", url, responseCode);
 
 
         return IOUtils.toByteArray(con.getInputStream());

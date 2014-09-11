@@ -25,16 +25,20 @@ import io.netty.handler.logging.LogLevel;
 import io.netty.handler.logging.LoggingHandler;
 import net.rainbowcode.jpixelface.skin.SkinFetcherThread;
 import net.rainbowcode.jpixelface.uuid.UUIDFetcherThread;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 public final class HttpServer {
 
     static final int PORT = 8000;
     static final UUIDFetcherThread UUID_FETCHER_THREAD = new UUIDFetcherThread();
     static final SkinFetcherThread SKIN_FETCHER_THREAD = new SkinFetcherThread();
+    static final Logger LOGGER = LogManager.getLogger();
 
     public static void main(String[] args) throws Exception {
         UUID_FETCHER_THREAD.start();
         SKIN_FETCHER_THREAD.start();
+        LOGGER.info("Starting server...");
         // Configure the server.
         EventLoopGroup bossGroup = new NioEventLoopGroup(1);
         EventLoopGroup workerGroup = new NioEventLoopGroup();
@@ -43,12 +47,11 @@ public final class HttpServer {
             b.option(ChannelOption.SO_BACKLOG, 1024);
             b.group(bossGroup, workerGroup)
                     .channel(NioServerSocketChannel.class)
-                    .handler(new LoggingHandler(LogLevel.INFO))
                     .childHandler(new HttpServerInitializer());
 
             Channel ch = b.bind(PORT).sync().channel();
 
-            System.err.println("Open your web browser and navigate to http://127.0.0.1:" + PORT + '/');
+            LOGGER.info("Started on port: {}", PORT);
 
             ch.closeFuture().sync();
         } finally {

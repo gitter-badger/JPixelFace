@@ -53,7 +53,7 @@ public class HttpServerHandler extends ChannelHandlerAdapter {
     public void channelRead(ChannelHandlerContext ctx, Object msg) {
         if (msg instanceof HttpRequest) {
             HttpRequest request = (HttpRequest) msg;
-            System.out.println(request.getUri());
+            HttpServer.LOGGER.info("Incoming request from {} : {}", ctx.channel().remoteAddress(), request.getUri());
             for (Mutate mutate : Mutate.values()) {
                 if (request.getUri().startsWith(mutate.getPath())) {
                     String[] split = request.getUri().split(mutate.getPath());

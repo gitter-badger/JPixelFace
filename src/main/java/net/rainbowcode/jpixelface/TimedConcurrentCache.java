@@ -18,7 +18,6 @@ public class TimedConcurrentCache<K, V> extends ConcurrentHashMap<K, V>{
                         if (System.currentTimeMillis() - value >= TTL) {
                             times.remove(entry.getKey());
                             remove(entry.getKey());
-                            System.out.println(entry.getKey());
                         }
                     }
 
