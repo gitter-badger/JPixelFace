@@ -50,8 +50,8 @@ public class Profile {
     public JsonObject toJson(){
         JsonObject object = new JsonObject();
         object.addProperty("name", name);
-        object.addProperty("uuid", uuid.toString());
-        object.addProperty("mojangUuid", getMojangUUID());
+        object.addProperty("uuid", uuid != null? uuid.toString() : null);
+        object.addProperty("mojangUuid", uuid != null? getMojangUUID() : null);
         object.addProperty("skinUrl", skinUrl);
         object.addProperty("capeUrl", capeUrl);
         return object;
