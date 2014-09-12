@@ -1,24 +1,18 @@
 package net.rainbowcode.jpixelface.skin;
 
 import io.netty.channel.ChannelHandlerContext;
+import net.rainbowcode.jpixelface.profile.Profile;
 
 import java.util.UUID;
 
 public class SkinFetchJob {
-    private final UUID uuid;
+    private final Profile profile;
     private final ChannelHandlerContext ctx;
     private final Mutate mutate;
     private final int size;
 
-    public SkinFetchJob(UUID uuid, ChannelHandlerContext ctx, Mutate mutate) {
-        this.uuid = uuid;
-        this.ctx = ctx;
-        this.mutate = mutate;
-        size = 64;
-    }
-
-    public SkinFetchJob(UUID uuid, ChannelHandlerContext ctx, Mutate mutate, int size) {
-        this.uuid = uuid;
+    public SkinFetchJob(Profile profile, ChannelHandlerContext ctx, Mutate mutate, int size) {
+        this.profile = profile;
         this.ctx = ctx;
         this.mutate = mutate;
         this.size = size;
@@ -32,8 +26,8 @@ public class SkinFetchJob {
         return mutate;
     }
 
-    public UUID getUuid() {
-        return uuid;
+    public Profile getProfile() {
+        return profile;
     }
 
     public int getSize() {

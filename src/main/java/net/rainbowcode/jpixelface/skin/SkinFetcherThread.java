@@ -1,16 +1,13 @@
 package net.rainbowcode.jpixelface.skin;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
-import com.google.gson.JsonPrimitive;
 import io.netty.buffer.ByteBuf;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpResponseStatus;
-import net.rainbowcode.jpixelface.HttpStringResponse;
 import net.rainbowcode.jpixelface.HttpUtil;
 import net.rainbowcode.jpixelface.TimedConcurrentCache;
+import net.rainbowcode.jpixelface.profile.Profile;
+import net.rainbowcode.jpixelface.profile.ProfileManager;
 import org.apache.commons.io.IOUtils;
 import org.imgscalr.Scalr;
 
@@ -18,7 +15,6 @@ import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.*;
-import java.util.Base64;
 import java.util.UUID;
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
@@ -49,37 +45,17 @@ public class SkinFetcherThread extends Thread {
 
             try {
                 boolean found = false;
-                byte[] skin = null;
-
-                if (pop.getUuid() == null) {
+                byte[] skin;
+                Profile profile = pop.getProfile();
+                if (profile.getUuid() == null) {
                     skin = IOUtils.toByteArray(new FileInputStream(new File("char.png")));
                 } else {
-                    byte[] cache = skinCache.get(pop.getUuid());
+                    byte[] cache = skinCache.get(profile.getUuid());
                     if (cache == null) {
-                        String url = "https://sessionserver.mojang.com/session/minecraft/profile/" + pop.getUuid().toString().replaceAll("-", "");
-                        HttpStringResponse response = HttpUtil.get(url);
-                        String string = response.getResponse();
-                        if (response.getCode() != 200) {
-                            skin = IOUtils.toByteArray(new FileInputStream(new File("char.png")));
+                        if (profile.getSkinUrl() != null){
+                            skin = HttpUtil.getAsBytes(profile.getSkinUrl());
                         } else {
-                            JsonParser parser = new JsonParser();
-                            JsonObject object = parser.parse(string).getAsJsonObject();
-                            JsonArray properties = object.getAsJsonArray("properties");
-                            JsonObject textures = properties.get(0).getAsJsonObject();
-                            String value = textures.get("value").getAsString();
-                            String decoded = new String(Base64.getDecoder().decode(value), "UTF-8");
-                            JsonObject parse = parser.parse(decoded).getAsJsonObject();
-                            JsonObject texturesOb = parse.getAsJsonObject("textures");
-                            if (texturesOb != null) {
-                                JsonObject skinOb = texturesOb.getAsJsonObject("SKIN");
-                                if (skinOb != null) {
-                                    JsonPrimitive primitive = skinOb.getAsJsonPrimitive("url");
-                                    skin = HttpUtil.getAsBytes(primitive.getAsString());
-                                }
-                            }
-                            if (skin == null) {
-                                skin = IOUtils.toByteArray(new FileInputStream(new File("char.png")));
-                            }
+                            skin = IOUtils.toByteArray(new FileInputStream(new File("char.png")));
                         }
                     } else {
                         skin = cache;
@@ -88,8 +64,8 @@ public class SkinFetcherThread extends Thread {
 
                 }
 
-                if (!found && pop.getUuid() != null) {
-                    skinCache.put(pop.getUuid(), skin);
+                if (!found && profile.getUuid() != null) {
+                    skinCache.put(profile.getUuid(), skin);
                 }
 
                 executor.execute(new SkinMutator(skin) {

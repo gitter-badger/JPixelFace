@@ -21,22 +21,20 @@ import io.netty.channel.ChannelOption;
 import io.netty.channel.EventLoopGroup;
 import io.netty.channel.nio.NioEventLoopGroup;
 import io.netty.channel.socket.nio.NioServerSocketChannel;
-import io.netty.handler.logging.LogLevel;
-import io.netty.handler.logging.LoggingHandler;
 import net.rainbowcode.jpixelface.skin.SkinFetcherThread;
-import net.rainbowcode.jpixelface.uuid.UUIDFetcherThread;
+import net.rainbowcode.jpixelface.uuid.ProfileFetcherThread;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 public final class HttpServer {
 
     static final int PORT = 8000;
-    static final UUIDFetcherThread UUID_FETCHER_THREAD = new UUIDFetcherThread();
+    static final ProfileFetcherThread PROFILE_FETCHER_THREAD = new ProfileFetcherThread();
     static final SkinFetcherThread SKIN_FETCHER_THREAD = new SkinFetcherThread();
-    static final Logger LOGGER = LogManager.getLogger();
+    public static final Logger LOGGER = LogManager.getLogger();
 
     public static void main(String[] args) throws Exception {
-        UUID_FETCHER_THREAD.start();
+        PROFILE_FETCHER_THREAD.start();
         SKIN_FETCHER_THREAD.start();
         LOGGER.info("Starting server...");
         // Configure the server.

@@ -15,6 +15,7 @@
  */
 package net.rainbowcode.jpixelface;
 
+import com.sk89q.squirrelid.util.UUIDs;
 import io.netty.buffer.Unpooled;
 import io.netty.channel.ChannelFutureListener;
 import io.netty.channel.ChannelHandlerAdapter;
@@ -23,16 +24,18 @@ import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpRequest;
 import io.netty.handler.codec.http.HttpResponseStatus;
+import net.rainbowcode.jpixelface.profile.Profile;
 import net.rainbowcode.jpixelface.skin.Mutate;
 import net.rainbowcode.jpixelface.skin.SkinFetchJob;
-import net.rainbowcode.jpixelface.uuid.UUIDFetchJob;
-import net.rainbowcode.jpixelface.uuid.UUIDFetchRunnable;
+import net.rainbowcode.jpixelface.uuid.ProfileFetchJob;
+import net.rainbowcode.jpixelface.uuid.ProfileFetchRunnable;
 import org.apache.commons.io.IOUtils;
 
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.UUID;
 import java.util.regex.Pattern;
 
 import static io.netty.handler.codec.http.HttpHeaders.Names.CONTENT_TYPE;
@@ -43,6 +46,7 @@ import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
 
 public class HttpServerHandler extends ChannelHandlerAdapter {
     private final Pattern NAME = Pattern.compile("^[A-Za-z0-9_]{2,16}$");
+    private final Pattern UUID_PATTERN = Pattern.compile("^[0-9a-f]{8}[0-9a-f]{4}[1-5][0-9a-f]{3}[89ab][0-9a-f]{3}[0-9a-f]{12}$");
 
     @Override
     public void channelReadComplete(ChannelHandlerContext ctx) {
@@ -66,13 +70,34 @@ public class HttpServerHandler extends ChannelHandlerAdapter {
                             } else {
                                 HttpUtil.sendError(ctx, HttpResponseStatus.NOT_ACCEPTABLE);
                             }
-
+                        } else if (UUID_PATTERN.matcher(name).find()) {
+                            int scale = getScale(split[1], mutate);
+                            if (scale != -1) {
+                                sendSkin(ctx, UUID.fromString(UUIDs.addDashes(name)), mutate, scale);
+                            } else {
+                                HttpUtil.sendError(ctx, HttpResponseStatus.NOT_ACCEPTABLE);
+                            }
                         } else {
                             HttpUtil.sendError(ctx, NOT_FOUND);
                         }
                     }
                     return;
                 }
+            }
+
+            if (request.getUri().startsWith("/profile/")) {
+                String[] split = request.getUri().split("/profile/");
+                if (split.length == 2) {
+                    String name = getName(split[1]);
+                    if (NAME.matcher(name).find()) {
+                        sendProfile(name, ctx);
+                    } else if (UUID_PATTERN.matcher(name).find()) {
+                        sendProfile(UUID.fromString(UUIDs.addDashes(name)), ctx);
+                    } else {
+                        HttpUtil.sendError(ctx, NOT_FOUND);
+                    }
+                }
+                return;
             }
 
 
@@ -143,6 +168,28 @@ public class HttpServerHandler extends ChannelHandlerAdapter {
         ctx.writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
     }
 
+    public void sendProfile(String name, ChannelHandlerContext ctx) {
+        HttpServer.PROFILE_FETCHER_THREAD.queue.add(new ProfileFetchJob(name, new ProfileFetchRunnable(ctx) {
+            @Override
+            public void run() {
+                FullHttpResponse response = new DefaultFullHttpResponse(HTTP_1_1, OK, Unpooled.wrappedBuffer(getProfile().toJson().toString().getBytes()));
+                response.headers().set(CONTENT_TYPE, "application/json");
+                getCtx().writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
+            }
+        }));
+    }
+
+    public void sendProfile(UUID uuid, ChannelHandlerContext ctx) {
+        HttpServer.PROFILE_FETCHER_THREAD.queue.add(new ProfileFetchJob(uuid, new ProfileFetchRunnable(ctx) {
+            @Override
+            public void run() {
+                FullHttpResponse response = new DefaultFullHttpResponse(HTTP_1_1, OK, Unpooled.wrappedBuffer(getProfile().toJson().toString().getBytes()));
+                response.headers().set(CONTENT_TYPE, "application/json");
+                getCtx().writeAndFlush(response).addListener(ChannelFutureListener.CLOSE);
+            }
+        }));
+    }
+
     private ArrayList<File> scanDir(File base) {
         ArrayList<File> files = new ArrayList<>();
         for (String s : base.list()) {
@@ -163,12 +210,25 @@ public class HttpServerHandler extends ChannelHandlerAdapter {
     }
 
     private void sendSkin(ChannelHandlerContext ctx, String name, Mutate mutate, int size) {
-        HttpServer.UUID_FETCHER_THREAD.queue.add(new UUIDFetchJob(name, new UUIDFetchRunnable(ctx) {
+        HttpServer.PROFILE_FETCHER_THREAD.queue.add(new ProfileFetchJob(name, new ProfileFetchRunnable(ctx) {
             @Override
             public void run() {
-                HttpServer.SKIN_FETCHER_THREAD.queue.add(new SkinFetchJob(getUuid(), getCtx(), mutate, size));
+                sendSkin(getCtx(), getProfile(), mutate, size);
             }
         }));
+    }
+
+    private void sendSkin(ChannelHandlerContext ctx, UUID uuid, Mutate mutate, int size) {
+        HttpServer.PROFILE_FETCHER_THREAD.queue.add(new ProfileFetchJob(uuid, new ProfileFetchRunnable(ctx) {
+            @Override
+            public void run() {
+                sendSkin(getCtx(), getProfile(), mutate, size);
+            }
+        }));
+    }
+
+    private void sendSkin(ChannelHandlerContext ctx, Profile profile, Mutate mutate, int size) {
+        HttpServer.SKIN_FETCHER_THREAD.queue.add(new SkinFetchJob(profile, ctx, mutate, size));
     }
 
     private String getName(String string) {
