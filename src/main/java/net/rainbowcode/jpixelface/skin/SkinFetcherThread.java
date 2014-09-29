@@ -7,7 +7,6 @@ import io.netty.handler.codec.http.HttpResponseStatus;
 import net.rainbowcode.jpixelface.HttpUtil;
 import net.rainbowcode.jpixelface.TimedConcurrentCache;
 import net.rainbowcode.jpixelface.profile.Profile;
-import net.rainbowcode.jpixelface.profile.ProfileManager;
 import org.apache.commons.io.IOUtils;
 import org.imgscalr.Scalr;
 
@@ -82,7 +81,7 @@ public class SkinFetcherThread extends Thread {
                                     bImageFromConvert = Scalr.crop(bImageFromConvert, 8, 8, 8, 8);
                                     bImageFromConvert = Scalr.resize(bImageFromConvert, Scalr.Method.SPEED, pop.getSize());
                                 } else if (pop.getMutate().equals(Mutate.HELM)) {
-                                    bImageFromConvert = getHealm(bImageFromConvert);
+                                    bImageFromConvert = getHelm(bImageFromConvert);
                                     bImageFromConvert = Scalr.resize(bImageFromConvert, Scalr.Method.SPEED, pop.getSize());
                                 } else if (pop.getMutate().equals(Mutate.BODY) || pop.getMutate().equals(Mutate.BODY_NOLAYER)) {
                                     bImageFromConvert = getBody(bImageFromConvert, pop.getMutate().equals(Mutate.BODY_NOLAYER));
@@ -136,7 +135,7 @@ public class SkinFetcherThread extends Thread {
         }
     }
 
-    public BufferedImage getHealm(BufferedImage bufferedImage) {
+    public BufferedImage getHelm(BufferedImage bufferedImage) {
         BufferedImage combined = new BufferedImage(8, 8, BufferedImage.TYPE_INT_ARGB);
         BufferedImage head = Scalr.crop(bufferedImage, 8, 8, 8, 8);
         BufferedImage overlay = Scalr.crop(bufferedImage, 40, 8, 8, 8);
@@ -149,7 +148,7 @@ public class SkinFetcherThread extends Thread {
 
     public BufferedImage getBody(BufferedImage bufferedImage, boolean naked) {
         BufferedImage combined = new BufferedImage(18, 32, BufferedImage.TYPE_INT_ARGB);
-        BufferedImage head = getHealm(bufferedImage);
+        BufferedImage head = getHelm(bufferedImage);
         BufferedImage rightArm = Scalr.crop(bufferedImage, 44, 20, 4, 12);
         BufferedImage leftArm;
         BufferedImage chest = Scalr.crop(bufferedImage, 20, 20, 8, 12);
