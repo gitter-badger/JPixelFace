@@ -11,11 +11,14 @@ import net.rainbowcode.jpixelface.uuid.ProfileFetcherThread;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
+import java.util.concurrent.atomic.AtomicInteger;
+
 public final class HttpServer {
 
     static final int PORT = 8000;
     static final ProfileFetcherThread PROFILE_FETCHER_THREAD = new ProfileFetcherThread();
     static final SkinFetcherThread SKIN_FETCHER_THREAD = new SkinFetcherThread();
+    public static AtomicInteger requestCounter = new AtomicInteger(600);
     public static final Logger LOGGER = LogManager.getLogger();
 
     public static void main(String[] args) throws Exception {

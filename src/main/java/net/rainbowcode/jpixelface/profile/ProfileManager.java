@@ -2,6 +2,7 @@ package net.rainbowcode.jpixelface.profile;
 
 import com.google.gson.*;
 import com.sk89q.squirrelid.util.UUIDs;
+import net.rainbowcode.jpixelface.HttpServer;
 import net.rainbowcode.jpixelface.HttpStringResponse;
 import net.rainbowcode.jpixelface.HttpUtil;
 import net.rainbowcode.jpixelface.TimedConcurrentCache;
@@ -21,6 +22,12 @@ public class ProfileManager {
         return profiles.computeIfAbsent(uuid, uuid1 -> {
             try {
                 String url = "https://sessionserver.mojang.com/session/minecraft/profile/" + uuid1.toString().replaceAll("-", "");
+                int i = HttpServer.requestCounter.get();
+                if (i == 1) {
+                    Thread.sleep(1000);
+                } else {
+                    HttpServer.requestCounter.decrementAndGet();
+                }
 
                 HttpStringResponse response = HttpUtil.get(url);
 
@@ -55,7 +62,7 @@ public class ProfileManager {
                     return new Profile(name, uuid1, skinUrl, capeUrl);
 
                 }
-            } catch (IOException e) {
+            } catch (IOException | InterruptedException e) {
                 e.printStackTrace();
             }
             return new Profile(null, uuid1, null, null);
@@ -66,6 +73,12 @@ public class ProfileManager {
         name = name.toLowerCase();
         Profile profile = getProfileFromUUID(uuids.computeIfAbsent(name, s -> {
             try {
+                int i = HttpServer.requestCounter.get();
+                if (i == 1) {
+                    Thread.sleep(1000);
+                } else {
+                    HttpServer.requestCounter.decrementAndGet();
+                }
                 HttpStringResponse response = HttpUtil.get("https://api.mojang.com/users/profiles/minecraft/" + s);
                 String string = response.getResponse();
                 JsonParser parser = new JsonParser();
@@ -80,7 +93,7 @@ public class ProfileManager {
                         return null;
                     }
                 }
-            } catch (IOException e) {
+            } catch (IOException | InterruptedException e) {
                 e.printStackTrace();
             }
             return null;

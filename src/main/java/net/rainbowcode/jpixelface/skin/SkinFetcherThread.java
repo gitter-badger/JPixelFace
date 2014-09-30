@@ -122,7 +122,7 @@ public class SkinFetcherThread extends Thread {
 
                 if (!found) {
                     try {
-                        sleep(1000);
+                        sleep(10);
                     } catch (InterruptedException e) {
                         e.printStackTrace();
                     }
