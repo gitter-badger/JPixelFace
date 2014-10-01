@@ -6,6 +6,8 @@ import net.rainbowcode.jpixelface.profile.Profile;
 import net.rainbowcode.jpixelface.profile.ProfileManager;
 
 import java.util.concurrent.ConcurrentLinkedQueue;
+import java.util.concurrent.ExecutorService;
+import java.util.concurrent.Executors;
 
 import static io.netty.handler.codec.http.HttpResponseStatus.INTERNAL_SERVER_ERROR;
 
@@ -13,6 +15,8 @@ public class ProfileFetcherThread extends Thread
 {
     public ConcurrentLinkedQueue<ProfileFetchJob> queue = new ConcurrentLinkedQueue<>();
     private long lastIncrement = System.currentTimeMillis();
+    private ExecutorService executor = Executors.newCachedThreadPool();
+
 
     @Override
     public void run()
@@ -48,6 +52,7 @@ public class ProfileFetcherThread extends Thread
             {
 
                 ProfileFetchJob pop = queue.poll();
+
                 try
                 {
                     boolean found = false;
@@ -60,24 +65,25 @@ public class ProfileFetcherThread extends Thread
                         found = ProfileManager.uuidExistsInCache(pop.getUuid());
                     }
 
-                    ProfileFetchRunnable runnable = pop.getRunnable();
-                    Profile p;
-                    if (pop.getName() != null)
-                    {
-                        p = ProfileManager.getProfileFromName(pop.getName());
-                    }
-                    else if (pop.getUuid() != null)
-                    {
-                        p = ProfileManager.getProfileFromUUID(pop.getUuid());
-                    }
-                    else
-                    {
-                        HttpServer.LOGGER.warn("A profile request with both name and uuid being null was passed to the fetcher thread!");
-                        p = new Profile(null, null, null, null);
-                    }
-                    runnable.setProfile(p);
-                    runnable.run();
-
+                    executor.execute(() -> {
+                        ProfileFetchRunnable runnable = pop.getRunnable();
+                        Profile p;
+                        if (pop.getName() != null)
+                        {
+                            p = ProfileManager.getProfileFromName(pop.getName());
+                        }
+                        else if (pop.getUuid() != null)
+                        {
+                            p = ProfileManager.getProfileFromUUID(pop.getUuid());
+                        }
+                        else
+                        {
+                            HttpServer.LOGGER.warn("A profile request with both name and uuid being null was passed to the fetcher thread!");
+                            p = new Profile(null, null, null, null);
+                        }
+                        runnable.setProfile(p);
+                        runnable.run();
+                    });
 
                     if (!found)
                     {

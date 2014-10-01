@@ -4,6 +4,7 @@ import io.netty.buffer.ByteBuf;
 import io.netty.handler.codec.http.DefaultFullHttpResponse;
 import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpResponseStatus;
+import net.rainbowcode.jpixelface.HttpServer;
 import net.rainbowcode.jpixelface.HttpUtil;
 import net.rainbowcode.jpixelface.TimedConcurrentCache;
 import net.rainbowcode.jpixelface.profile.Profile;

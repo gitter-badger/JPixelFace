@@ -11,30 +11,38 @@ import java.io.IOException;
 import java.util.Base64;
 import java.util.UUID;
 
-public class ProfileManager {
+public class ProfileManager
+{
     private static final TimedConcurrentCache<UUID, Profile> profiles = new TimedConcurrentCache<>(86400000L);
     private static final TimedConcurrentCache<String, UUID> uuids = new TimedConcurrentCache<>(86400000L);
 
-    public static Profile getProfileFromUUID(UUID uuid) {
-        if (uuid == null) {
+    public static Profile getProfileFromUUID(UUID uuid)
+    {
+        if (uuid == null)
+        {
             return new Profile(null, null, null, null);
         }
         return profiles.computeIfAbsent(uuid, uuid1 -> {
-            try {
+            try
+            {
                 String url = "https://sessionserver.mojang.com/session/minecraft/profile/" + uuid1.toString().replaceAll("-", "");
-                int i = HttpServer.requestCounter.get();
-                if (i == 1) {
+
+                while (HttpServer.requestCounter.get() == 1)
+                {
                     Thread.sleep(1000);
-                } else {
-                    HttpServer.requestCounter.decrementAndGet();
                 }
+
+                HttpServer.requestCounter.decrementAndGet();
 
                 HttpStringResponse response = HttpUtil.get(url);
 
                 String string = response.getResponse();
-                if (response.getCode() != 200) {
+                if (response.getCode() != 200)
+                {
                     return new Profile(null, uuid1, null, null);
-                } else {
+                }
+                else
+                {
                     JsonParser parser = new JsonParser();
                     JsonObject object = parser.parse(string).getAsJsonObject();
                     JsonArray properties = object.getAsJsonArray("properties");
@@ -46,14 +54,17 @@ public class ProfileManager {
                     JsonObject texturesOb = parse.getAsJsonObject("textures");
                     String skinUrl = null;
                     String capeUrl = null;
-                    if (texturesOb != null) {
+                    if (texturesOb != null)
+                    {
                         JsonObject skinOb = texturesOb.getAsJsonObject("SKIN");
-                        if (skinOb != null) {
+                        if (skinOb != null)
+                        {
                             JsonPrimitive primitive = skinOb.getAsJsonPrimitive("url");
                             skinUrl = primitive.getAsString();
                         }
                         JsonObject capeOb = texturesOb.getAsJsonObject("CAPE");
-                        if (capeOb != null) {
+                        if (capeOb != null)
+                        {
                             JsonPrimitive primitive = capeOb.getAsJsonPrimitive("url");
                             capeUrl = primitive.getAsString();
                         }
@@ -62,54 +73,70 @@ public class ProfileManager {
                     return new Profile(name, uuid1, skinUrl, capeUrl);
 
                 }
-            } catch (IOException | InterruptedException e) {
+            }
+            catch (IOException | InterruptedException e)
+            {
                 e.printStackTrace();
             }
             return new Profile(null, uuid1, null, null);
         });
     }
 
-    public static Profile getProfileFromName(String name) {
+    public static Profile getProfileFromName(String name)
+    {
         name = name.toLowerCase();
         Profile profile = getProfileFromUUID(uuids.computeIfAbsent(name, s -> {
-            try {
-                int i = HttpServer.requestCounter.get();
-                if (i == 1) {
+            try
+            {
+                while (HttpServer.requestCounter.get() == 1)
+                {
                     Thread.sleep(1000);
-                } else {
-                    HttpServer.requestCounter.decrementAndGet();
                 }
+
+                HttpServer.requestCounter.decrementAndGet();
+
                 HttpStringResponse response = HttpUtil.get("https://api.mojang.com/users/profiles/minecraft/" + s);
                 String string = response.getResponse();
                 JsonParser parser = new JsonParser();
-                if (response.getCode() != 200) {
+                if (response.getCode() != 200)
+                {
                     return null;
-                } else {
+                }
+                else
+                {
                     JsonElement parse = parser.parse(string);
-                    if (parse != null) {
+                    if (parse != null)
+                    {
                         JsonObject object = parse.getAsJsonObject();
                         return UUID.fromString(UUIDs.addDashes(object.getAsJsonPrimitive("id").getAsString()));
-                    } else {
+                    }
+                    else
+                    {
                         return null;
                     }
                 }
-            } catch (IOException | InterruptedException e) {
+            }
+            catch (IOException | InterruptedException e)
+            {
                 e.printStackTrace();
             }
             return null;
         }));
-        if (profile.getName() == null) {
+        if (profile.getName() == null)
+        {
             return new Profile(name, null, null, null);
         }
         return profile;
     }
 
-    public static boolean nameExistsInCache(String name) {
+    public static boolean nameExistsInCache(String name)
+    {
         name = name.toLowerCase();
         return uuids.contains(name);
     }
 
-    public static boolean uuidExistsInCache(UUID uuid){
+    public static boolean uuidExistsInCache(UUID uuid)
+    {
         return profiles.contains(uuid);
     }
 }
