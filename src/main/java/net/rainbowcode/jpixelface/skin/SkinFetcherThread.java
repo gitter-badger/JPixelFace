@@ -6,12 +6,16 @@ import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import net.rainbowcode.jpixelface.HttpServer;
 import net.rainbowcode.jpixelface.HttpUtil;
-import net.rainbowcode.jpixelface.TimedConcurrentCache;
 import net.rainbowcode.jpixelface.profile.Profile;
+import net.rainbowcode.jpixelface.profile.ProfileManager;
+
 import org.apache.commons.io.IOUtils;
 import org.imgscalr.Scalr;
 
+import redis.clients.jedis.Jedis;
+
 import javax.imageio.ImageIO;
+
 import java.awt.*;
 import java.awt.image.BufferedImage;
 import java.io.*;
@@ -27,7 +31,6 @@ import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
 
 public class SkinFetcherThread extends Thread {
     public ConcurrentLinkedQueue<SkinFetchJob> queue = new ConcurrentLinkedQueue<>();
-    private TimedConcurrentCache<UUID, byte[]> skinCache = new TimedConcurrentCache<>(86400000L);
     private ExecutorService executor = Executors.newCachedThreadPool();
 
     @Override
@@ -44,29 +47,28 @@ public class SkinFetcherThread extends Thread {
             SkinFetchJob pop = queue.poll();
 
             try {
-                boolean found = false;
                 byte[] skin;
                 Profile profile = pop.getProfile();
                 if (profile.getUuid() == null) {
                     skin = IOUtils.toByteArray(new FileInputStream(new File("char.png")));
                 } else {
-                    byte[] cache = skinCache.get(profile.getUuid());
-                    if (cache == null) {
-                        if (profile.getSkinUrl() != null){
-                            skin = HttpUtil.getAsBytes(profile.getSkinUrl());
-                        } else {
-                            skin = IOUtils.toByteArray(new FileInputStream(new File("char.png")));
-                        }
+                	if (profile.getSkinUrl() != null){
+                		try (Jedis jedis = ProfileManager.pool.getResource()) {
+                			String key = "skin:" + profile.getUuid().toString();
+                			if (jedis.exists(key)){
+                    			skin = jedis.get(key.getBytes());
+                    		} else {
+                                skin = HttpUtil.getAsBytes(profile.getSkinUrl());
+                                jedis.set(key.getBytes(), skin);
+                                jedis.expire(key.getBytes(), 86400);
+                    		}
+                		}
+                		
                     } else {
-                        skin = cache;
-                        found = true;
+                        skin = IOUtils.toByteArray(new FileInputStream(new File("char.png")));
                     }
-
                 }
 
-                if (!found && profile.getUuid() != null) {
-                    skinCache.put(profile.getUuid(), skin);
-                }
 
                 executor.execute(new SkinMutator(skin) {
                     @Override
@@ -119,16 +121,6 @@ public class SkinFetcherThread extends Thread {
                         }
                     }
                 });
-
-
-                if (!found) {
-                    try {
-                        sleep(10);
-                    } catch (InterruptedException e) {
-                        e.printStackTrace();
-                    }
-                }
-
             } catch (IOException e) {
                 e.printStackTrace();
             }
