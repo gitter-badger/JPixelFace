@@ -6,6 +6,8 @@ import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import net.rainbowcode.jpixelface.HttpServer;
 import net.rainbowcode.jpixelface.HttpUtil;
+import net.rainbowcode.jpixelface.RedisKey;
+import net.rainbowcode.jpixelface.RedisUtils;
 import net.rainbowcode.jpixelface.profile.Profile;
 import net.rainbowcode.jpixelface.profile.ProfileManager;
 
@@ -53,16 +55,13 @@ public class SkinFetcherThread extends Thread {
                     skin = IOUtils.toByteArray(new FileInputStream(new File("char.png")));
                 } else {
                 	if (profile.getSkinUrl() != null){
-                		try (Jedis jedis = ProfileManager.pool.getResource()) {
-                			String key = "skin:" + profile.getUuid().toString();
-                			if (jedis.exists(key)){
-                    			skin = jedis.get(key.getBytes());
+                			byte[] key = RedisKey.SKIN.buildByteKey(profile.getUuid().toString());
+                			if (RedisUtils.exists(key)){
+                    			skin = RedisUtils.getAsBytes(key);
                     		} else {
                                 skin = HttpUtil.getAsBytes(profile.getSkinUrl());
-                                jedis.set(key.getBytes(), skin);
-                                jedis.expire(key.getBytes(), 86400);
+                                RedisUtils.setAndExpire(key, skin, 86400);
                     		}
-                		}
                 		
                     } else {
                         skin = IOUtils.toByteArray(new FileInputStream(new File("char.png")));

@@ -73,3 +73,8 @@ dependency-reduced-pom.xml
 
 src/main/resources/rebel.xml
 pixelface.log
+
+## eclipse ##
+.settings/
+.project
+.classpath
