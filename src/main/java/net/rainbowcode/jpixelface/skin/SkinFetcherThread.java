@@ -78,6 +78,7 @@ public class SkinFetcherThread extends Thread {
                                 InputStream in = new ByteArrayInputStream(newSkin);
                                 BufferedImage bImageFromConvert = ImageIO.read(in);
                                 in.close();
+                                                               
 
                                 if (pop.getMutate().equals(Mutate.AVATAR)) {
                                     bImageFromConvert = Scalr.crop(bImageFromConvert, 8, 8, 8, 8);
@@ -131,7 +132,19 @@ public class SkinFetcherThread extends Thread {
         BufferedImage combined = new BufferedImage(8, 8, BufferedImage.TYPE_INT_ARGB);
         BufferedImage head = Scalr.crop(bufferedImage, 8, 8, 8, 8);
         BufferedImage overlay = Scalr.crop(bufferedImage, 40, 8, 8, 8);
-        Graphics graphics = combined.getGraphics();
+        
+        //Iterate over pixels in stuff and replace white and black to be transparent to match minecraft rendering.
+        // This is only to support dumb users using MS paint.
+        for (int x = 0; x < 8; x++) {
+        	for (int y = 0; y < 8; y++) {
+        		int rgb = overlay.getRGB(x, y);
+    			if(rgb == -1){
+    				overlay.setRGB(x, y, Color.TRANSLUCENT);
+    			}
+    		}
+		}
+        
+        Graphics graphics = combined.getGraphics();    
         graphics.drawImage(head, 0, 0, null);
         graphics.drawImage(overlay, 0, 0, null);
         graphics.dispose();
