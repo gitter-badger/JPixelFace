@@ -27,7 +27,7 @@ public class Profile {
     
     private String ifNotNullGetAsString(JsonObject object, String string){
     	JsonElement jsonElement = object.get(string);
-    	if(jsonElement != null) {
+    	if(jsonElement != null && !jsonElement.isJsonNull()) {
     		return jsonElement.getAsString();
     	} else {
     		return null;
