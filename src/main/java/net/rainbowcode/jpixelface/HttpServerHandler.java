@@ -32,6 +32,7 @@ import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
 public class HttpServerHandler extends ChannelHandlerAdapter {
     private final Pattern NAME = Pattern.compile("^[A-Za-z0-9_]{2,16}$");
     private final Pattern UUID_PATTERN = Pattern.compile("^[0-9a-f]{8}[0-9a-f]{4}[1-5][0-9a-f]{3}[89ab][0-9a-f]{3}[0-9a-f]{12}$");
+    private final Pattern REAL_UUID_PATTERN = Pattern.compile("^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$");
 
     @Override
     public void channelReadComplete(ChannelHandlerContext ctx) {
@@ -62,6 +63,13 @@ public class HttpServerHandler extends ChannelHandlerAdapter {
                             } else {
                                 HttpUtil.sendError(ctx, HttpResponseStatus.NOT_ACCEPTABLE);
                             }
+                        } else if (REAL_UUID_PATTERN.matcher(name).find()) {
+                            int scale = getScale(split[1], mutate);
+                            if (scale != -1) {
+                                sendSkin(ctx, UUID.fromString(name), mutate, scale);
+                            } else {
+                                HttpUtil.sendError(ctx, HttpResponseStatus.NOT_ACCEPTABLE);
+                            }
                         } else {
                             HttpUtil.sendError(ctx, NOT_FOUND);
                         }
@@ -78,6 +86,8 @@ public class HttpServerHandler extends ChannelHandlerAdapter {
                         sendProfile(name, ctx);
                     } else if (UUID_PATTERN.matcher(name).find()) {
                         sendProfile(UUID.fromString(UUIDs.addDashes(name)), ctx);
+                    } else if (REAL_UUID_PATTERN.matcher(name).find()) {
+                        sendProfile(UUID.fromString(name), ctx);
                     } else {
                         HttpUtil.sendError(ctx, NOT_FOUND);
                     }
