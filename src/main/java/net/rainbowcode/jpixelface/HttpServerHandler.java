@@ -135,7 +135,7 @@ public class HttpServerHandler extends ChannelHandlerAdapter {
             String[] split = s.split("/");
 
             if (split.length == 2) {
-                int number = Integer.parseInt(getName(split[1]));
+                int number = Integer.parseInt(getName(split[1]).replaceAll(".png", ""));
                 if (number >= MIN_SCALE && number <= MAX_SCALE) {
                     return number;
                 } else {
