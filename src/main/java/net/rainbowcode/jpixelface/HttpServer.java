@@ -19,7 +19,7 @@ public final class HttpServer {
     static final ProfileFetcherThread PROFILE_FETCHER_THREAD = new ProfileFetcherThread();
     static final SkinFetcherThread SKIN_FETCHER_THREAD = new SkinFetcherThread();
     public static AtomicInteger requestCounter = new AtomicInteger(600);
-    public static final Logger LOGGER = LogManager.getLogger();
+    private static final Logger LOGGER = LogManager.getLogger();
 
     public static void main(String[] args) throws Exception {
         PROFILE_FETCHER_THREAD.start();

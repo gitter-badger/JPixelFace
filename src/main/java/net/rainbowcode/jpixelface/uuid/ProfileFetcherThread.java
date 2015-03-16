@@ -4,6 +4,8 @@ import net.rainbowcode.jpixelface.HttpServer;
 import net.rainbowcode.jpixelface.HttpUtil;
 import net.rainbowcode.jpixelface.profile.Profile;
 import net.rainbowcode.jpixelface.profile.ProfileManager;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.ExecutorService;
@@ -16,6 +18,7 @@ public class ProfileFetcherThread extends Thread
     public ConcurrentLinkedQueue<ProfileFetchJob> queue = new ConcurrentLinkedQueue<>();
     private long lastIncrement = System.currentTimeMillis();
     private ExecutorService executor = Executors.newCachedThreadPool();
+    private static final Logger LOGGER = LogManager.getLogger();
 
 
     @Override
@@ -34,7 +37,7 @@ public class ProfileFetcherThread extends Thread
                 {
                     HttpServer.requestCounter.incrementAndGet();
                     lastIncrement = System.currentTimeMillis();
-                    HttpServer.LOGGER.info("Counter: {}", HttpServer.requestCounter.get());
+                    LOGGER.info("Counter: {}", HttpServer.requestCounter.get());
                 }
             }
             if (queue.isEmpty())
@@ -78,7 +81,7 @@ public class ProfileFetcherThread extends Thread
                         }
                         else
                         {
-                            HttpServer.LOGGER.warn("A profile request with both name and uuid being null was passed to the fetcher thread!");
+                            LOGGER.warn("A profile request with both name and uuid being null was passed to the fetcher thread!");
                             p = new Profile(null, null, null, null);
                         }
                         runnable.setProfile(p);

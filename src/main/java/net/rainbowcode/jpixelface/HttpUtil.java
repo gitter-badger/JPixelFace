@@ -8,6 +8,8 @@ import io.netty.handler.codec.http.FullHttpResponse;
 import io.netty.handler.codec.http.HttpResponseStatus;
 import io.netty.util.CharsetUtil;
 import org.apache.commons.io.IOUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.BufferedReader;
 import java.io.IOException;
@@ -19,9 +21,11 @@ import static io.netty.handler.codec.http.HttpHeaders.Names.CONTENT_TYPE;
 import static io.netty.handler.codec.http.HttpVersion.HTTP_1_1;
 
 public class HttpUtil {
+    private static final Logger LOGGER = LogManager.getLogger();
+
     public static HttpStringResponse get(String url) throws IOException {
         URL obj = new URL(url);
-        HttpServer.LOGGER.info("Sending 'GET' request to URL : {}", url);
+        LOGGER.info("Sending 'GET' request to URL : {}", url);
         HttpURLConnection con = (HttpURLConnection) obj.openConnection();
 
         // optional default is GET
@@ -30,7 +34,7 @@ public class HttpUtil {
         //add request header
         con.setRequestProperty("User-Agent", "jPixelFace dev");
         int responseCode = con.getResponseCode();
-        HttpServer.LOGGER.info("Request to url finished: {} - Response code: {}", url, responseCode);
+        LOGGER.info("Request to url finished: {} - Response code: {}", url, responseCode);
 
         BufferedReader in = new BufferedReader(
                 new InputStreamReader(con.getInputStream()));
@@ -49,7 +53,7 @@ public class HttpUtil {
 
     public static byte[] getAsBytes(String url) throws IOException {
         URL obj = new URL(url);
-        HttpServer.LOGGER.info("Sending 'GET' request to URL : {}", url);
+        LOGGER.info("Sending 'GET' request to URL : {}", url);
         HttpURLConnection con = (HttpURLConnection) obj.openConnection();
 
         // optional default is GET
@@ -59,7 +63,7 @@ public class HttpUtil {
         con.setRequestProperty("User-Agent", "jPixelFace dev");
 
         int responseCode = con.getResponseCode();
-        HttpServer.LOGGER.info("Request to url finished: {} - Response code: {}", url, responseCode);
+        LOGGER.info("Request to url finished: {} - Response code: {}", url, responseCode);
 
 
         return IOUtils.toByteArray(con.getInputStream());

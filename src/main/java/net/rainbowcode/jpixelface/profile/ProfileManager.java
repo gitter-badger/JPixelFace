@@ -6,6 +6,8 @@ import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import com.sk89q.squirrelid.util.UUIDs;
 import net.rainbowcode.jpixelface.*;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.IOException;
 import java.util.Base64;
@@ -14,6 +16,7 @@ import java.util.UUID;
 import java.util.function.Supplier;
 
 public class ProfileManager {
+    private static final Logger LOGGER = LogManager.getLogger();
 
 	private static int getTicket() {
 		while (HttpServer.requestCounter.get() == 1) {
@@ -83,8 +86,8 @@ public class ProfileManager {
 				e.printStackTrace();
 			}
 		}
-		HttpServer.LOGGER.error("Profile from uuid failed hard!");
-		return new Profile(null, null, null, null);
+        LOGGER.error("Profile from uuid failed hard!");
+        return new Profile(null, null, null, null);
 	}
 
 	private static UUID uuidFromName(String name) {
@@ -120,8 +123,8 @@ public class ProfileManager {
 			}
 		}
 
-		HttpServer.LOGGER.warn("UUID To profile failed hard");
-		return null;
+        LOGGER.warn("UUID To profile failed hard");
+        return null;
 	}
 
 	public static Profile getProfileFromName(String name) {

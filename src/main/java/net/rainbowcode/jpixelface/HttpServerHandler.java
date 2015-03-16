@@ -15,6 +15,8 @@ import net.rainbowcode.jpixelface.skin.SkinFetchJob;
 import net.rainbowcode.jpixelface.uuid.ProfileFetchJob;
 import net.rainbowcode.jpixelface.uuid.ProfileFetchRunnable;
 import org.apache.commons.io.IOUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 
 import java.io.File;
 import java.io.FileInputStream;
@@ -33,6 +35,7 @@ public class HttpServerHandler extends ChannelHandlerAdapter {
     private final Pattern NAME = Pattern.compile("^[A-Za-z0-9_]{2,16}$");
     private final Pattern UUID_PATTERN = Pattern.compile("^[0-9a-f]{8}[0-9a-f]{4}[1-5][0-9a-f]{3}[89ab][0-9a-f]{3}[0-9a-f]{12}$");
     private final Pattern REAL_UUID_PATTERN = Pattern.compile("^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$");
+    private static final Logger LOGGER = LogManager.getLogger();
 
     @Override
     public void channelReadComplete(ChannelHandlerContext ctx) {
@@ -43,7 +46,7 @@ public class HttpServerHandler extends ChannelHandlerAdapter {
     public void channelRead(ChannelHandlerContext ctx, Object msg) {
         if (msg instanceof HttpRequest) {
             HttpRequest request = (HttpRequest) msg;
-            HttpServer.LOGGER.info("Incoming request from {} : {}", ctx.channel().remoteAddress(), request.getUri());
+            LOGGER.info("Incoming request from {} : {}", ctx.channel().remoteAddress(), request.getUri());
             for (Mutate mutate : Mutate.values()) {
                 if (request.getUri().startsWith(mutate.getPath())) {
                     String[] split = request.getUri().split(mutate.getPath());
