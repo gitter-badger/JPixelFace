@@ -1,17 +1,17 @@
 package net.rainbowcode.jpixelface.profile;
 
-import com.google.gson.*;
+import com.google.gson.JsonArray;
+import com.google.gson.JsonElement;
+import com.google.gson.JsonObject;
+import com.google.gson.JsonParser;
 import com.sk89q.squirrelid.util.UUIDs;
-
-import net.rainbowcode.jpixelface.HttpServer;
-import net.rainbowcode.jpixelface.HttpStringResponse;
-import net.rainbowcode.jpixelface.HttpUtil;
-import net.rainbowcode.jpixelface.RedisKey;
-import net.rainbowcode.jpixelface.RedisUtils;
+import net.rainbowcode.jpixelface.*;
 
 import java.io.IOException;
 import java.util.Base64;
+import java.util.Optional;
 import java.util.UUID;
+import java.util.function.Supplier;
 
 public class ProfileManager {
 
@@ -67,24 +67,15 @@ public class ProfileManager {
 							value), "UTF-8");
 					JsonObject parse = parser.parse(decoded).getAsJsonObject();
 					JsonObject texturesOb = parse.getAsJsonObject("textures");
-					String skinUrl = null;
-					String capeUrl = null;
-					if (texturesOb != null) {
-						JsonObject skinOb = texturesOb.getAsJsonObject("SKIN");
-						if (skinOb != null) {
-							JsonPrimitive primitive = skinOb
-									.getAsJsonPrimitive("url");
-							skinUrl = primitive.getAsString();
-						}
-						JsonObject capeOb = texturesOb.getAsJsonObject("CAPE");
-						if (capeOb != null) {
-							JsonPrimitive primitive = capeOb
-									.getAsJsonPrimitive("url");
-							capeUrl = primitive.getAsString();
-						}
-					}
-					Profile profile = new Profile(name, uuid, skinUrl, capeUrl);
-					commitProfile(profile);
+                    final String[] skinUrl = {null};
+                    final String[] capeUrl = {null};
+                    if (texturesOb != null) {
+                        resolve(() -> texturesOb.getAsJsonObject("SKIN").getAsJsonPrimitive("url").getAsString()).ifPresent(x -> skinUrl[0] = x);
+                        resolve(() -> texturesOb.getAsJsonObject("CAPE").getAsJsonPrimitive("url").getAsString()).ifPresent(x -> capeUrl[0] = x);
+                    }
+                    Profile profile = new Profile(name, uuid, skinUrl[0], capeUrl[0]);
+                    System.out.println(profile);
+                    commitProfile(profile);
 					return profile;
 
 				}
@@ -150,4 +141,23 @@ public class ProfileManager {
 	public static boolean uuidExistsInCache(UUID uuid) {
 		return RedisUtils.exists(RedisKey.PROFILE_UUID.buildKey(uuid.toString()));
 	}
+
+    /**
+     * Resolves optional objects, dealing with nulls.
+     * <p>
+     * Nicked from https://github.com/winterbe/java8-tutorial
+     * MIT: https://github.com/winterbe/java8-tutorial/blob/master/LICENSE
+     *
+     * @param resolver
+     * @param <T>
+     * @return
+     */
+    public static <T> Optional<T> resolve(Supplier<T> resolver) {
+        try {
+            T result = resolver.get();
+            return Optional.ofNullable(result);
+        } catch (NullPointerException e) {
+            return Optional.empty();
+        }
+    }
 }
