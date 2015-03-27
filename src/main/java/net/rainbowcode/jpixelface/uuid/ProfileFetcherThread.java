@@ -8,8 +8,6 @@ import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 
 import java.util.concurrent.ConcurrentLinkedQueue;
-import java.util.concurrent.ExecutorService;
-import java.util.concurrent.Executors;
 
 import static io.netty.handler.codec.http.HttpResponseStatus.INTERNAL_SERVER_ERROR;
 
@@ -17,7 +15,6 @@ public class ProfileFetcherThread extends Thread
 {
     public ConcurrentLinkedQueue<ProfileFetchJob> queue = new ConcurrentLinkedQueue<>();
     private long lastIncrement = System.currentTimeMillis();
-    private ExecutorService executor = Executors.newCachedThreadPool();
     private static final Logger LOGGER = LogManager.getLogger();
 
 
@@ -68,25 +65,23 @@ public class ProfileFetcherThread extends Thread
                         found = ProfileManager.uuidExistsInCache(pop.getUuid());
                     }
 
-                    executor.execute(() -> {
-                        ProfileFetchRunnable runnable = pop.getRunnable();
-                        Profile p;
-                        if (pop.getName() != null)
-                        {
-                            p = ProfileManager.getProfileFromName(pop.getName());
-                        }
-                        else if (pop.getUuid() != null)
-                        {
-                            p = ProfileManager.getProfileFromUUID(pop.getUuid());
-                        }
-                        else
-                        {
-                            LOGGER.warn("A profile request with both name and uuid being null was passed to the fetcher thread!");
-                            p = new Profile(null, null, null, null);
-                        }
-                        runnable.setProfile(p);
-                        runnable.run();
-                    });
+                    ProfileFetchRunnable runnable = pop.getRunnable();
+                    Profile p;
+                    if (pop.getName() != null)
+                    {
+                        p = ProfileManager.getProfileFromName(pop.getName());
+                    }
+                    else if (pop.getUuid() != null)
+                    {
+                        p = ProfileManager.getProfileFromUUID(pop.getUuid());
+                    }
+                    else
+                    {
+                        LOGGER.warn("A profile request with both name and uuid being null was passed to the fetcher thread!");
+                        p = new Profile(null, null, null, null);
+                    }
+                    runnable.setProfile(p);
+                    runnable.run();
 
                     if (!found)
                     {
