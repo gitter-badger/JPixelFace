@@ -1,6 +1,7 @@
 package net.rainbowcode.jpixelface.skin;
 
-public enum Mutate {
+public enum Mutate
+{
     NONE("/skin/"),
     HELM("/helm/"),
     BODY("/body/"),
@@ -13,11 +14,13 @@ public enum Mutate {
 
     private final String path;
 
-    Mutate(String path) {
+    Mutate(String path)
+    {
         this.path = path;
     }
 
-    public String getPath() {
+    public String getPath()
+    {
         return path;
     }
 }
