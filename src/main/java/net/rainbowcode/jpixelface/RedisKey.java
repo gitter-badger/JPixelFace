@@ -9,7 +9,7 @@ public enum RedisKey
 
     private final String key;
 
-    private RedisKey(String key)
+    RedisKey(String key)
     {
         this.key = key;
     }
