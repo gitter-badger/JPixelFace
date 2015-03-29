@@ -3,8 +3,6 @@ package net.rainbowcode.jpixelface;
 import com.sk89q.squirrelid.util.UUIDs;
 import net.rainbowcode.jpixelface.profile.ProfileManager;
 import net.rainbowcode.jpixelface.skin.Mutate;
-import org.apache.logging.log4j.LogManager;
-import org.apache.logging.log4j.Logger;
 
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -39,7 +37,7 @@ public final class HttpServer
             }
         }
     };
-    private static final Logger LOGGER = LogManager.getLogger();
+
     private static final Pattern NAME = Pattern.compile("^[A-Za-z0-9_]{2,16}$");
     private static final Pattern UUID_PATTERN = Pattern.compile("^[0-9a-f]{8}[0-9a-f]{4}[1-5][0-9a-f]{3}[89ab][0-9a-f]{3}[0-9a-f]{12}$");
     private static final Pattern REAL_UUID_PATTERN = Pattern.compile("^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$");
@@ -147,31 +145,5 @@ public final class HttpServer
             halt(403, "Not acceptable input");
             return "Not acceptable input";
         });
-
-//        PROFILE_FETCHER_THREAD.start();
-//        SKIN_FETCHER_THREAD.start();
-//        LOGGER.info("Starting server...");
-//        // Configure the server.
-//        EventLoopGroup bossGroup = new NioEventLoopGroup(1);
-//        EventLoopGroup workerGroup = new NioEventLoopGroup();
-//        RouteManager manager = new RouteManager();
-//        manager.register(RouteADerp.class);
-//
-//        try {
-//            ServerBootstrap b = new ServerBootstrap();
-//            b.option(ChannelOption.SO_BACKLOG, 1024);
-//            b.group(bossGroup, workerGroup)
-//                    .channel(NioServerSocketChannel.class)
-//                    .childHandler(new HttpServerInitializer(manager));
-//
-//            Channel ch = b.bind(PORT).sync().channel();
-//
-//            LOGGER.info("Started on port: {}", PORT);
-//
-//            ch.closeFuture().sync();
-//        } finally {
-//            bossGroup.shutdownGracefully();
-//            workerGroup.shutdownGracefully();
-//        }
     }
 }
