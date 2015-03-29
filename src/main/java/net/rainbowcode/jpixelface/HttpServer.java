@@ -3,7 +3,9 @@ package net.rainbowcode.jpixelface;
 import com.sk89q.squirrelid.util.UUIDs;
 import net.rainbowcode.jpixelface.profile.ProfileManager;
 import net.rainbowcode.jpixelface.skin.Mutate;
+import spark.Response;
 
+import java.io.IOException;
 import java.util.UUID;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
@@ -54,26 +56,23 @@ public final class HttpServer
             get(mutate.getPath() + ":id", (request, response) -> {
                 String id = request.params("id").replace(".png", "");
                 int size = 64;
+
                 if (NAME.matcher(id).find())
                 {
-                    response.type("image/png");
-                    response.raw().getOutputStream().write(skinManager.getMutated(ProfileManager.getProfileFromName(id), size, mutate));
-                    halt(200);
+                    sendPng(response, skinManager.getMutated(ProfileManager.getProfileFromName(id), size, mutate));
                     return null;
                 }
                 else if (UUID_PATTERN.matcher(id).find())
                 {
-                    response.type("image/png");
-                    response.raw().getOutputStream().write(skinManager.getMutated(ProfileManager.getProfileFromUUID(UUID.fromString(UUIDs.addDashes(id))), size, mutate));
-                    halt(200);
+                    sendPng(response, skinManager.getMutated(ProfileManager.getProfileFromUUID(UUID.fromString(UUIDs.addDashes(id))), size, mutate));
                     return null;
                 }
                 else if (REAL_UUID_PATTERN.matcher(id).find())
                 {
-                    response.type("image/png");
-                    response.raw().getOutputStream().write(skinManager.getMutated(ProfileManager.getProfileFromUUID(UUID.fromString(id)), size, mutate));
-                    halt(200);
+                    sendPng(response, skinManager.getMutated(ProfileManager.getProfileFromUUID(UUID.fromString(id)), size, mutate));
+                    return null;
                 }
+
 
                 halt(403, "Not acceptable input");
                 return "Not acceptable input";
@@ -99,23 +98,17 @@ public final class HttpServer
 
                 if (NAME.matcher(id).find())
                 {
-                    response.type("image/png");
-                    response.raw().getOutputStream().write(skinManager.getMutated(ProfileManager.getProfileFromName(id), size, mutate));
-                    halt(200);
+                    sendPng(response, skinManager.getMutated(ProfileManager.getProfileFromName(id), size, mutate));
                     return null;
                 }
                 else if (UUID_PATTERN.matcher(id).find())
                 {
-                    response.type("image/png");
-                    response.raw().getOutputStream().write(skinManager.getMutated(ProfileManager.getProfileFromUUID(UUID.fromString(UUIDs.addDashes(id))), size, mutate));
-                    halt(200);
+                    sendPng(response, skinManager.getMutated(ProfileManager.getProfileFromUUID(UUID.fromString(UUIDs.addDashes(id))), size, mutate));
                     return null;
                 }
                 else if (REAL_UUID_PATTERN.matcher(id).find())
                 {
-                    response.type("image/png");
-                    response.raw().getOutputStream().write(skinManager.getMutated(ProfileManager.getProfileFromUUID(UUID.fromString(id)), size, mutate));
-                    halt(200);
+                    sendPng(response, skinManager.getMutated(ProfileManager.getProfileFromUUID(UUID.fromString(id)), size, mutate));
                     return null;
                 }
 
@@ -145,5 +138,12 @@ public final class HttpServer
             halt(403, "Not acceptable input");
             return "Not acceptable input";
         });
+    }
+
+    private static void sendPng(Response response, byte[] bytes) throws IOException
+    {
+        response.type("image/png");
+        response.raw().getOutputStream().write(bytes);
+        halt(200);
     }
 }
