@@ -66,7 +66,7 @@ public class ProfileManager
 
                 getTicket();
 
-                HttpStringResponse response = HttpUtil.get(url);
+                HttpStringResponse response = HttpUtil.getAsString(url);
 
                 String string = response.getResponse();
                 if (response.getCode() != 200)
@@ -124,7 +124,7 @@ public class ProfileManager
                 getTicket();
 
                 HttpStringResponse response = HttpUtil
-                        .get("https://api.mojang.com/users/profiles/minecraft/"
+                        .getAsString("https://api.mojang.com/users/profiles/minecraft/"
                                 + name);
                 String string = response.getResponse();
                 JsonParser parser = new JsonParser();

@@ -14,7 +14,7 @@ public class HttpUtil
     private static final Logger LOGGER = LogManager.getLogger();
     private static final OkHttpClient client = new OkHttpClient();
 
-    public static HttpStringResponse get(String url) throws IOException
+    private static Response get(String url) throws IOException
     {
         Request request = new Request.Builder()
                 .url(url)
@@ -27,24 +27,18 @@ public class HttpUtil
 
         int responseCode = response.code();
         LOGGER.info("Request to url finished: {} - Response code: {}", url, responseCode);
+        return response;
+    }
 
-        return new HttpStringResponse(response.body().string(), responseCode);
+    public static HttpStringResponse getAsString(String url) throws IOException
+    {
+        Response response = get(url);
+        return new HttpStringResponse(response.body().string(), response.code());
     }
 
     public static byte[] getAsBytes(String url) throws IOException
     {
-        Request request = new Request.Builder()
-                .url(url)
-                .addHeader("User-Agent", "jPixelFace dev")
-                .get()
-                .build();
-
-        LOGGER.info("Sending 'GET' request to URL : {}", url);
-        Response response = client.newCall(request).execute();
-
-        int responseCode = response.code();
-        LOGGER.info("Request to url finished: {} - Response code: {}", url, responseCode);
-
+        Response response = get(url);
         return response.body().bytes();
     }
 
