@@ -80,7 +80,18 @@ public final class HttpServer
 
             get(mutate.getPath() + ":id/:size", (request, response) -> {
                 String id = request.params("id").replace(".png", "");
-                int size = Integer.parseInt(request.params("size").replace(".png", ""));
+                int size = -1;
+
+                try
+                {
+                    size = Integer.parseInt(request.params("size").replace(".png", ""));
+                }
+                catch (NumberFormatException e)
+                {
+                    halt(403, "Not acceptable input: Size input is not a number");
+                    return "Not acceptable input: Size input is not a number";
+                }
+                
                 int MIN_SCALE = 8;
                 int MAX_SCALE = 512;
 
