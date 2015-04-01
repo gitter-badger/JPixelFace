@@ -9,7 +9,7 @@ import redis.clients.jedis.JedisPoolConfig;
 public class RedisUtils
 {
     private static final JedisPool pool = new JedisPool(new JedisPoolConfig(),
-            "localhost");
+            System.getenv("REDIS_PORT_6379_TCP_ADDR"));
 
     /**
      * Sets the key and expiry time

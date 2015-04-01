@@ -1,0 +1,9 @@
+web:
+  build: .
+  command: java -Xmx1G -Xms1G -XX:+UseG1GC -jar pixelface.jar
+  ports:
+   - "8000:8000"
+  links:
+   - redis
+redis:
+  image: redis
