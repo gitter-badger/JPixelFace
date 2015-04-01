@@ -3,15 +3,37 @@ package net.rainbowcode.jpixelface;
 import net.rainbowcode.jpixelface.profile.Profile;
 import net.rainbowcode.jpixelface.skin.Mutate;
 import org.apache.commons.io.IOUtils;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import org.imgscalr.Scalr;
 
 import javax.imageio.ImageIO;
 import java.awt.*;
 import java.awt.image.BufferedImage;
-import java.io.*;
+import java.io.ByteArrayInputStream;
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
+import java.io.InputStream;
 
 public class SkinManager
 {
+    private final Logger logger = LogManager.getLogger();
+    private byte[] defaultSkin;
+
+    public SkinManager()
+    {
+        try
+        {
+            defaultSkin = IOUtils.toByteArray(getClass().getResourceAsStream("/char.png"));
+        }
+        catch (IOException e)
+        {
+            e.printStackTrace();
+            logger.fatal("Unable to load char.png! Shutting down!");
+            System.exit(1);
+        }
+    }
+
     public byte[] getSkinFromProfile(Profile profile)
     {
         byte[] skin = null;
@@ -19,7 +41,7 @@ public class SkinManager
         {
             if (profile.getUuid() == null)
             {
-                skin = IOUtils.toByteArray(new FileInputStream(new File("char.png")));
+                skin = defaultSkin;
             }
             else
             {
@@ -39,9 +61,7 @@ public class SkinManager
                 }
                 else
                 {
-
-                    skin = IOUtils.toByteArray(new FileInputStream(new File("char.png")));
-
+                    skin = defaultSkin;
                 }
             }
         }
