@@ -1,19 +1,23 @@
 package net.rainbowcode.jpixelface;
 
-public class HttpStringResponse {
+public class HttpStringResponse
+{
     private final String response;
     private final int code;
 
-    public HttpStringResponse(String response, int code) {
+    public HttpStringResponse(String response, int code)
+    {
         this.response = response;
         this.code = code;
     }
 
-    public String getResponse() {
+    public String getResponse()
+    {
         return response;
     }
 
-    public int getCode() {
+    public int getCode()
+    {
         return code;
     }
 }
