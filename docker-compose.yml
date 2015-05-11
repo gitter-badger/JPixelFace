@@ -2,7 +2,7 @@ web:
   build: .
   command: java -Xmx256M -Xms256M -jar pixelface.jar
   ports:
-   - "80:8000"
+   - "5050:8000"
   links:
    - redis
 redis:
