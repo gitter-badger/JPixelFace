@@ -85,36 +85,7 @@ public class SkinManager
                 BufferedImage bImageFromConvert = ImageIO.read(in);
                 in.close();
 
-
-                if (mutate.equals(Mutate.AVATAR))
-                {
-                    bImageFromConvert = Scalr.crop(bImageFromConvert, 8, 8, 8, 8);
-                    bImageFromConvert = Scalr.resize(bImageFromConvert, Scalr.Method.SPEED, size);
-                }
-                else if (mutate.equals(Mutate.HELM))
-                {
-                    bImageFromConvert = getHelm(bImageFromConvert);
-                    bImageFromConvert = Scalr.resize(bImageFromConvert, Scalr.Method.SPEED, size);
-                }
-                else if (mutate.equals(Mutate.BODY) || mutate.equals(Mutate.BODY_NOLAYER))
-                {
-                    bImageFromConvert = getBody(bImageFromConvert, mutate.equals(Mutate.BODY_NOLAYER));
-                    bImageFromConvert = Scalr.resize(bImageFromConvert, Scalr.Method.SPEED, 18 * size, 32 * size);
-                }
-                else if (mutate.equals(Mutate.TORSO) || mutate.equals(Mutate.TORSO_NOLAYER))
-                {
-                    BufferedImage body = getBody(bImageFromConvert, mutate.equals(Mutate.TORSO_NOLAYER));
-                    body = Scalr.crop(body, 1, 0, 17, 20);
-                    bImageFromConvert = Scalr.resize(body, Scalr.Method.SPEED, 18 * size, 20 * size);
-                    body.flush();
-                }
-                else if (mutate.equals(Mutate.BUST) || mutate.equals(Mutate.BUST_NOLAYER))
-                {
-                    BufferedImage body = getBody(bImageFromConvert, mutate.equals(Mutate.BUST_NOLAYER));
-                    body = Scalr.crop(body, 1, 0, 16, 16);
-                    bImageFromConvert = Scalr.resize(body, Scalr.Method.SPEED, size);
-                    body.flush();
-                }
+                bImageFromConvert = mutate.act(bImageFromConvert, size);
 
                 ByteArrayOutputStream baos = new ByteArrayOutputStream();
                 ImageIO.write(bImageFromConvert, "png", baos);
@@ -134,7 +105,7 @@ public class SkinManager
     }
 
 
-    public BufferedImage getHelm(BufferedImage bufferedImage)
+    public static BufferedImage getHelm(BufferedImage bufferedImage)
     {
         BufferedImage combined = new BufferedImage(8, 8, BufferedImage.TYPE_INT_ARGB);
         BufferedImage head = Scalr.crop(bufferedImage, 8, 8, 8, 8);
@@ -161,7 +132,7 @@ public class SkinManager
         return combined;
     }
 
-    public BufferedImage getBody(BufferedImage bufferedImage, boolean naked)
+    public static BufferedImage getBody(BufferedImage bufferedImage, boolean naked)
     {
         BufferedImage combined = new BufferedImage(18, 32, BufferedImage.TYPE_INT_ARGB);
         BufferedImage head = getHelm(bufferedImage);
