@@ -4,7 +4,6 @@ import com.google.gson.JsonArray;
 import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
-import com.sk89q.squirrelid.util.UUIDs;
 import net.rainbowcode.jpixelface.*;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
@@ -138,7 +137,7 @@ public class ProfileManager
                     if (parse != null)
                     {
                         JsonObject object = parse.getAsJsonObject();
-                        UUID uuid = UUID.fromString(UUIDs.addDashes(object
+                        UUID uuid = UUID.fromString(StringUtil.addDashes(object
                                 .getAsJsonPrimitive("id").getAsString()));
                         RedisUtils.setAndExpire(key, uuid.toString(), 86400);
                         return uuid;

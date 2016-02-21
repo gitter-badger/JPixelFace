@@ -1,6 +1,5 @@
 package net.rainbowcode.jpixelface;
 
-import com.sk89q.squirrelid.util.UUIDs;
 import net.rainbowcode.jpixelface.profile.ProfileManager;
 import net.rainbowcode.jpixelface.skin.Mutate;
 import spark.Response;
@@ -91,7 +90,7 @@ public final class HttpServer
                 }
                 else if (UUID_PATTERN.matcher(id).find())
                 {
-                    sendPng(response, skinManager.getMutated(ProfileManager.getProfileFromUUID(UUID.fromString(UUIDs.addDashes(id))), size, mutate));
+                    sendPng(response, skinManager.getMutated(ProfileManager.getProfileFromUUID(UUID.fromString(StringUtil.addDashes(id))), size, mutate));
                     return null;
                 }
                 else if (REAL_UUID_PATTERN.matcher(id).find())
@@ -141,7 +140,7 @@ public final class HttpServer
                 }
                 else if (UUID_PATTERN.matcher(id).find())
                 {
-                    sendPng(response, skinManager.getMutated(ProfileManager.getProfileFromUUID(UUID.fromString(UUIDs.addDashes(id))), size, mutate));
+                    sendPng(response, skinManager.getMutated(ProfileManager.getProfileFromUUID(UUID.fromString(StringUtil.addDashes(id))), size, mutate));
                     return null;
                 }
                 else if (REAL_UUID_PATTERN.matcher(id).find())
@@ -166,7 +165,7 @@ public final class HttpServer
             }
             else if (UUID_PATTERN.matcher(id).find())
             {
-                return ProfileManager.getProfileFromUUID(UUID.fromString(UUIDs.addDashes(id))).toJson();
+                return ProfileManager.getProfileFromUUID(UUID.fromString(StringUtil.addDashes(id))).toJson();
             }
             else if (REAL_UUID_PATTERN.matcher(id).find())
             {
