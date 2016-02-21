@@ -4,6 +4,7 @@ import net.rainbowcode.jpixelface.profile.ProfileManager;
 import net.rainbowcode.jpixelface.skin.Mutate;
 import spark.Response;
 
+import javax.servlet.http.HttpServletResponse;
 import java.io.IOException;
 import java.time.LocalDateTime;
 import java.time.ZoneId;
@@ -79,32 +80,21 @@ public final class HttpServer
 
         for (Mutate mutate : Mutate.values())
         {
-            get(mutate.getPath() + ":id", (request, response) -> {
+            get(mutate.getPath() + ":id", "image/png", (request, response) -> {
                 String id = request.params("id").replace(".png", "");
                 int size = 64;
 
-                if (NAME.matcher(id).find())
+                HttpServletResponse httpServletResponse = handleImage(response, id, size, mutate);
+                if (httpServletResponse != null)
                 {
-                    sendPng(response, skinManager.getMutated(ProfileManager.getProfileFromName(id), size, mutate));
-                    return null;
+                    return httpServletResponse;
                 }
-                else if (UUID_PATTERN.matcher(id).find())
-                {
-                    sendPng(response, skinManager.getMutated(ProfileManager.getProfileFromUUID(UUID.fromString(StringUtil.addDashes(id))), size, mutate));
-                    return null;
-                }
-                else if (REAL_UUID_PATTERN.matcher(id).find())
-                {
-                    sendPng(response, skinManager.getMutated(ProfileManager.getProfileFromUUID(UUID.fromString(id)), size, mutate));
-                    return null;
-                }
-
 
                 halt(403, "Not acceptable input");
                 return "Not acceptable input";
             });
 
-            get(mutate.getPath() + ":id/:size", (request, response) -> {
+            get(mutate.getPath() + ":id/:size", "image/png", (request, response) -> {
                 String id = request.params("id").replace(".png", "");
                 int size = -1;
 
@@ -117,36 +107,21 @@ public final class HttpServer
                     halt(403, "Not acceptable input: Size input is not a number");
                     return "Not acceptable input: Size input is not a number";
                 }
-                
-                int MIN_SCALE = 8;
-                int MAX_SCALE = 512;
 
-                if (mutate.equals(Mutate.BODY) || mutate.equals(Mutate.BODY_NOLAYER) || mutate.equals(Mutate.TORSO) || mutate.equals(Mutate.TORSO_NOLAYER))
-                {
-                    MIN_SCALE = 1;
-                    MAX_SCALE = 128;
-                }
+                int minScale = mutate.getMinScale();
+                int maxScale = mutate.getMaxScale();
 
-                if (size > MAX_SCALE || size < MIN_SCALE)
+                if (size > maxScale || size < minScale)
                 {
-                    halt(403, "Not acceptable input: Scale out of bounds (" + MIN_SCALE + " - " + MAX_SCALE + ")");
-                    return "Not acceptable input: Scale out of bounds (" + MIN_SCALE + " - " + MAX_SCALE + ")";
+                    halt(403, "Not acceptable input: Scale out of bounds (" + minScale + " - " + maxScale + ")");
+                    return "Not acceptable input: Scale out of bounds (" + minScale + " - " + maxScale + ")";
                 }
 
-                if (NAME.matcher(id).find())
+                HttpServletResponse httpServletResponse = handleImage(response, id, size, mutate);
+
+                if (httpServletResponse != null)
                 {
-                    sendPng(response, skinManager.getMutated(ProfileManager.getProfileFromName(id), size, mutate));
-                    return null;
-                }
-                else if (UUID_PATTERN.matcher(id).find())
-                {
-                    sendPng(response, skinManager.getMutated(ProfileManager.getProfileFromUUID(UUID.fromString(StringUtil.addDashes(id))), size, mutate));
-                    return null;
-                }
-                else if (REAL_UUID_PATTERN.matcher(id).find())
-                {
-                    sendPng(response, skinManager.getMutated(ProfileManager.getProfileFromUUID(UUID.fromString(id)), size, mutate));
-                    return null;
+                    return httpServletResponse;
                 }
 
                 halt(403, "Not acceptable input (Not a valid Minecraft name, Mojang UUID or real UUID)");
@@ -155,9 +130,8 @@ public final class HttpServer
         }
 
 
-        get("/profile/:id", (request, response) -> {
+        get("/profile/:id", "application/json", (request, response) -> {
             String id = request.params("id").replace(".json", "");
-            response.type("application/json");
 
             if (NAME.matcher(id).find())
             {
@@ -177,10 +151,30 @@ public final class HttpServer
         });
     }
 
-    private static void sendPng(Response response, byte[] bytes) throws IOException
+    private static HttpServletResponse handleImage(Response response, String id, int size, Mutate mutate) throws IOException
     {
-        response.type("image/png");
-        response.raw().getOutputStream().write(bytes);
-        halt(200);
+        HttpServletResponse raw = response.raw();
+        if (NAME.matcher(id).find())
+        {
+            raw.getOutputStream().write(skinManager.getMutated(ProfileManager.getProfileFromName(id), size, mutate));
+            raw.getOutputStream().flush();
+            raw.getOutputStream().close();
+            return raw;
+        }
+        else if (UUID_PATTERN.matcher(id).find())
+        {
+            raw.getOutputStream().write(skinManager.getMutated(ProfileManager.getProfileFromUUID(UUID.fromString(StringUtil.addDashes(id))), size, mutate));
+            raw.getOutputStream().flush();
+            raw.getOutputStream().close();
+            return raw;
+        }
+        else if (REAL_UUID_PATTERN.matcher(id).find())
+        {
+            raw.getOutputStream().write(skinManager.getMutated(ProfileManager.getProfileFromUUID(UUID.fromString(id)), size, mutate));
+            raw.getOutputStream().flush();
+            raw.getOutputStream().close();
+            return raw;
+        }
+        return null;
     }
 }
