@@ -66,13 +66,6 @@
 
     <dependencies>
         <dependency>
-            <groupId>com.sk89q</groupId>
-            <artifactId>squirrelid</artifactId>
-            <version>0.1.0</version>
-            <scope>compile</scope>
-            <type>jar</type>
-        </dependency>
-        <dependency>
             <groupId>com.google.code.gson</groupId>
             <artifactId>gson</artifactId>
             <version>2.3</version>

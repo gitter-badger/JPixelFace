@@ -1,6 +1,5 @@
 web:
   build: .
-  command: java -Xmx256M -Xms256M -jar pixelface.jar
   ports:
    - "5050:8000"
   links:
