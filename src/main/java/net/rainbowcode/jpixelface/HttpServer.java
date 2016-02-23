@@ -84,10 +84,10 @@ public final class HttpServer
                 String id = request.params("id").replace(".png", "");
                 int size = 64;
 
-                HttpServletResponse httpServletResponse = handleImage(response, id, size, mutate);
+                Response httpServletResponse = handleImage(response, id, size, mutate);
                 if (httpServletResponse != null)
                 {
-                    return httpServletResponse;
+                    return httpServletResponse.raw();
                 }
 
                 halt(403, "Not acceptable input");
@@ -117,11 +117,11 @@ public final class HttpServer
                     return "Not acceptable input: Scale out of bounds (" + minScale + " - " + maxScale + ")";
                 }
 
-                HttpServletResponse httpServletResponse = handleImage(response, id, size, mutate);
+                Response httpServletResponse = handleImage(response, id, size, mutate);
 
                 if (httpServletResponse != null)
                 {
-                    return httpServletResponse;
+                    return httpServletResponse.raw();
                 }
 
                 halt(403, "Not acceptable input (Not a valid Minecraft name, Mojang UUID or real UUID)");
@@ -151,30 +151,27 @@ public final class HttpServer
         });
     }
 
-    private static HttpServletResponse handleImage(Response response, String id, int size, Mutate mutate) throws IOException
+    private static Response handleImage(Response response, String id, int size, Mutate mutate) throws IOException
     {
+        response.type("image/png");
         HttpServletResponse raw = response.raw();
+        byte[] mutated = new byte[0];
         if (NAME.matcher(id).find())
         {
-            raw.getOutputStream().write(skinManager.getMutated(ProfileManager.getProfileFromName(id), size, mutate));
-            raw.getOutputStream().flush();
-            raw.getOutputStream().close();
-            return raw;
+            mutated = skinManager.getMutated(ProfileManager.getProfileFromName(id), size, mutate);
         }
         else if (UUID_PATTERN.matcher(id).find())
         {
-            raw.getOutputStream().write(skinManager.getMutated(ProfileManager.getProfileFromUUID(UUID.fromString(StringUtil.addDashes(id))), size, mutate));
-            raw.getOutputStream().flush();
-            raw.getOutputStream().close();
-            return raw;
+            mutated = skinManager.getMutated(ProfileManager.getProfileFromUUID(UUID.fromString(StringUtil.addDashes(id))), size, mutate);
         }
         else if (REAL_UUID_PATTERN.matcher(id).find())
         {
-            raw.getOutputStream().write(skinManager.getMutated(ProfileManager.getProfileFromUUID(UUID.fromString(id)), size, mutate));
-            raw.getOutputStream().flush();
-            raw.getOutputStream().close();
-            return raw;
+            mutated = skinManager.getMutated(ProfileManager.getProfileFromUUID(UUID.fromString(id)), size, mutate);
         }
-        return null;
+
+        raw.getOutputStream().write(mutated);
+        raw.getOutputStream().flush();
+        raw.getOutputStream().close();
+        return response;
     }
 }
