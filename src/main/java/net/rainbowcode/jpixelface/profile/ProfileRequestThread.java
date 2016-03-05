@@ -7,10 +7,11 @@ import org.apache.logging.log4j.Logger;
 import java.util.LinkedList;
 import java.util.Queue;
 import java.util.UUID;
+import java.util.concurrent.ConcurrentLinkedQueue;
 
 public class ProfileRequestThread extends Thread implements Runnable
 {
-    Queue<ProfileFuture> futureQueue = new LinkedList<>();
+    Queue<ProfileFuture> futureQueue = new ConcurrentLinkedQueue<>();
     private final Logger log = LogManager.getLogger();
 
     @Override
