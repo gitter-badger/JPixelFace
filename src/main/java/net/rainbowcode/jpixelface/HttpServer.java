@@ -1,6 +1,8 @@
 package net.rainbowcode.jpixelface;
 
+import net.rainbowcode.jpixelface.profile.ProfileFuture;
 import net.rainbowcode.jpixelface.profile.ProfileManager;
+import net.rainbowcode.jpixelface.profile.ProfileRequestThread;
 import net.rainbowcode.jpixelface.skin.Mutate;
 import spark.Response;
 
@@ -11,6 +13,7 @@ import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
 import java.util.UUID;
+import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
 
@@ -48,10 +51,12 @@ public final class HttpServer
     private static final Pattern UUID_PATTERN = Pattern.compile("^[0-9a-f]{8}[0-9a-f]{4}[1-5][0-9a-f]{3}[89ab][0-9a-f]{3}[0-9a-f]{12}$");
     private static final Pattern REAL_UUID_PATTERN = Pattern.compile("^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$");
     public static SkinManager skinManager = new SkinManager();
+    public static ProfileRequestThread requestThread = new ProfileRequestThread();
 
     public static void main(String[] args) throws Exception
     {
         tickCounter.start();
+        requestThread.start();
         staticFileLocation("/public");
         port(PORT);
 
@@ -132,18 +137,28 @@ public final class HttpServer
 
         get("/profile/:id", "application/json", (request, response) -> {
             String id = request.params("id").replace(".json", "");
+            ProfileFuture future = null;
 
             if (NAME.matcher(id).find())
             {
-                return ProfileManager.getProfileFromName(id).toJson();
+                future = requestThread.getProfileByName(id);
             }
             else if (UUID_PATTERN.matcher(id).find())
             {
-                return ProfileManager.getProfileFromUUID(UUID.fromString(StringUtil.addDashes(id))).toJson();
+                future = requestThread.getProfileByMojangID(id);
             }
             else if (REAL_UUID_PATTERN.matcher(id).find())
             {
-                return ProfileManager.getProfileFromUUID(UUID.fromString(id)).toJson();
+                future = requestThread.getProfileByUUID(id);
+            }
+
+            if (future != null)
+            {
+                while (!future.isDone())
+                {
+                    Thread.sleep(1);
+                }
+                return future.get().toJson();
             }
 
             halt(403, "Not acceptable input");
@@ -151,25 +166,35 @@ public final class HttpServer
         });
     }
 
-    private static Response handleImage(Response response, String id, int size, Mutate mutate) throws IOException
+    private static Response handleImage(Response response, String id, int size, Mutate mutate) throws IOException, InterruptedException, ExecutionException
     {
-        response.type("image/png");
-        HttpServletResponse raw = response.raw();
-        byte[] mutated = new byte[0];
+
+        ProfileFuture future;
         if (NAME.matcher(id).find())
         {
-            mutated = skinManager.getMutated(ProfileManager.getProfileFromName(id), size, mutate);
+            future = requestThread.getProfileByName(id);
         }
         else if (UUID_PATTERN.matcher(id).find())
         {
-            mutated = skinManager.getMutated(ProfileManager.getProfileFromUUID(UUID.fromString(StringUtil.addDashes(id))), size, mutate);
+            future = requestThread.getProfileByMojangID(id);
         }
         else if (REAL_UUID_PATTERN.matcher(id).find())
         {
-            mutated = skinManager.getMutated(ProfileManager.getProfileFromUUID(UUID.fromString(id)), size, mutate);
+            future = requestThread.getProfileByUUID(id);
         }
-
-        raw.getOutputStream().write(mutated);
+        else
+        {
+            response.status(403);
+            response.body("Not a username, uuid or Mojang id.");
+            return response;
+        }
+        response.type("image/png");
+        HttpServletResponse raw = response.raw();
+        while (!future.isDone())
+        {
+            Thread.sleep(1);
+        }
+        raw.getOutputStream().write(skinManager.getMutated(future.get(), size, mutate));
         raw.getOutputStream().flush();
         raw.getOutputStream().close();
         return response;
