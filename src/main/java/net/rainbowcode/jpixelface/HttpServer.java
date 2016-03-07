@@ -65,8 +65,9 @@ public final class HttpServer
             String key = "cache:" + request1.uri();
             response1.header("Cache-Control", "public, max-age=86400");
             ZonedDateTime now = LocalDateTime.now().atZone(ZoneId.of("GMT"));
-            response1.header("Date", now.format(DateTimeFormatter.ofPattern("EEE, dd MMM yyyy HH:mm:ss zzz")));
-            String oldAge = now.format(DateTimeFormatter.ofPattern("EEE, dd MMM yyyy HH:mm:ss zzz"));
+            String datetime = now.format(DateTimeFormatter.ofPattern("EEE, dd MMM yyyy HH:mm:ss zzz"));
+            response1.header("Date", datetime);
+            String oldAge = datetime;
             if (RedisUtils.exists(key))
             {
                 oldAge = RedisUtils.getAsString(key);
