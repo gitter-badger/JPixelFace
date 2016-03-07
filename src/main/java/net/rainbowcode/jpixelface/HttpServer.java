@@ -1,7 +1,6 @@
 package net.rainbowcode.jpixelface;
 
 import net.rainbowcode.jpixelface.profile.ProfileFuture;
-import net.rainbowcode.jpixelface.profile.ProfileManager;
 import net.rainbowcode.jpixelface.profile.ProfileRequestThread;
 import net.rainbowcode.jpixelface.skin.Mutate;
 import spark.Response;
@@ -12,7 +11,6 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
