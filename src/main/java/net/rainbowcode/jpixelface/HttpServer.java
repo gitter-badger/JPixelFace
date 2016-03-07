@@ -166,6 +166,38 @@ public final class HttpServer
             halt(403, "Not acceptable input");
             return "Not acceptable input";
         });
+
+        get("/test/:id", (request, response) -> {
+            String id = request.params("id").replace(".json", "");
+            ProfileFuture future = null;
+
+            if (NAME.matcher(id).find())
+            {
+                future = requestThread.getProfileByName(id);
+            }
+            else if (UUID_PATTERN.matcher(id).find())
+            {
+                future = requestThread.getProfileByMojangID(id);
+            }
+            else if (REAL_UUID_PATTERN.matcher(id).find())
+            {
+                future = requestThread.getProfileByUUID(id);
+            }
+
+            if (future != null)
+            {
+                while (!future.isDone())
+                {
+                    Thread.sleep(1);
+                }
+                response.type("image/svg+xml");
+                response.header("Content-Encoding", "gzip");
+                return SVGGenerator.convert(skinManager.getBufferedMutated(future.get(), 8, Mutate.HELM));
+            }
+
+            halt(403, "Not acceptable input");
+            return "Not acceptable input";
+        });
     }
 
     private static Response handleImage(Response response, String id, int size, Mutate mutate) throws IOException, InterruptedException, ExecutionException

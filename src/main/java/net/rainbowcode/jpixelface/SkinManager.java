@@ -105,6 +105,29 @@ public class SkinManager
     }
 
 
+    public BufferedImage getBufferedMutated(Profile profile, int size, Mutate mutate)
+    {
+        try
+        {
+            byte[] newSkin = getSkinFromProfile(profile);
+            InputStream in = new ByteArrayInputStream(newSkin);
+            BufferedImage bImageFromConvert = ImageIO.read(in);
+            in.close();
+            if (!mutate.equals(Mutate.NONE))
+            {
+                bImageFromConvert = mutate.act(bImageFromConvert, size);
+            }
+            return bImageFromConvert;
+
+        }
+        catch (IOException e)
+        {
+            e.printStackTrace();
+            return null;
+        }
+    }
+
+
     public static BufferedImage getHelm(BufferedImage bufferedImage)
     {
         BufferedImage combined = new BufferedImage(8, 8, BufferedImage.TYPE_INT_ARGB);
