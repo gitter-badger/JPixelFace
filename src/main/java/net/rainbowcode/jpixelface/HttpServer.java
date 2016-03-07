@@ -65,16 +65,15 @@ public final class HttpServer
             String key = "cache:" + request1.uri();
             response1.header("Cache-Control", "public, max-age=86400");
             ZonedDateTime now = LocalDateTime.now().atZone(ZoneId.of("GMT"));
-            String datetime = now.format(DateTimeFormatter.ofPattern("EEE, dd MMM yyyy HH:mm:ss zzz"));
-            response1.header("Date", datetime);
-            String oldAge = datetime;
+            String oldAge = now.format(DateTimeFormatter.ofPattern("EEE, dd MMM yyyy HH:mm:ss zzz"));
+            boolean shouldHalt = false;
             if (RedisUtils.exists(key))
             {
                 oldAge = RedisUtils.getAsString(key);
                 String modified = request1.headers("If-Modified-Since");
                 if (modified != null && modified.equals(oldAge))
                 {
-                    halt(304);
+                    shouldHalt = true;
                 }
             }
             else
@@ -82,6 +81,10 @@ public final class HttpServer
                 RedisUtils.setAndExpire(key, oldAge, 86400);
             }
             response1.header("Last-Modified", oldAge);
+            if (shouldHalt)
+            {
+                halt(304);
+            }
         });
 
         for (Mutate mutate : Mutate.values())
