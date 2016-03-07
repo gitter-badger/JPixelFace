@@ -1,7 +1,6 @@
 package net.rainbowcode.jpixelface;
 
 import net.rainbowcode.jpixelface.profile.ProfileFuture;
-import net.rainbowcode.jpixelface.profile.ProfileManager;
 import net.rainbowcode.jpixelface.profile.ProfileRequestThread;
 import net.rainbowcode.jpixelface.skin.Mutate;
 import spark.Response;
@@ -12,7 +11,6 @@ import java.time.LocalDateTime;
 import java.time.ZoneId;
 import java.time.ZonedDateTime;
 import java.time.format.DateTimeFormatter;
-import java.util.UUID;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.regex.Pattern;
@@ -65,15 +63,15 @@ public final class HttpServer
             String key = "cache:" + request1.uri();
             response1.header("Cache-Control", "public, max-age=86400");
             ZonedDateTime now = LocalDateTime.now().atZone(ZoneId.of("GMT"));
-            response1.header("Date", now.format(DateTimeFormatter.ofPattern("EEE, dd MMM yyyy HH:mm:ss zzz")));
             String oldAge = now.format(DateTimeFormatter.ofPattern("EEE, dd MMM yyyy HH:mm:ss zzz"));
+            boolean shouldHalt = false;
             if (RedisUtils.exists(key))
             {
                 oldAge = RedisUtils.getAsString(key);
                 String modified = request1.headers("If-Modified-Since");
                 if (modified != null && modified.equals(oldAge))
                 {
-                    halt(304);
+                    shouldHalt = true;
                 }
             }
             else
@@ -81,6 +79,10 @@ public final class HttpServer
                 RedisUtils.setAndExpire(key, oldAge, 86400);
             }
             response1.header("Last-Modified", oldAge);
+            if (shouldHalt)
+            {
+                halt(304);
+            }
         });
 
         for (Mutate mutate : Mutate.values())

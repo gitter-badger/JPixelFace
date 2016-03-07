@@ -111,18 +111,24 @@ public class SkinManager
         BufferedImage head = Scalr.crop(bufferedImage, 8, 8, 8, 8);
         BufferedImage overlay = Scalr.crop(bufferedImage, 40, 8, 8, 8);
 
-        //Iterate over pixels in stuff and replace white and black to be transparent to match minecraft rendering.
+        //Iterate over pixels to see if overlay is all black.
         // This is only to support dumb users using MS paint.
+        boolean allBlack = true;
         for (int x = 0; x < 8; x++)
         {
             for (int y = 0; y < 8; y++)
             {
                 int rgb = overlay.getRGB(x, y);
-                if (rgb == -1)
+                if (rgb != -16777216)
                 {
-                    overlay.setRGB(x, y, Color.TRANSLUCENT);
+                    allBlack = false;
                 }
             }
+        }
+
+        if (allBlack)
+        {
+            return head;
         }
 
         Graphics graphics = combined.getGraphics();
