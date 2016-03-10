@@ -139,20 +139,7 @@ public final class HttpServer
 
         get("/profile/:id", "application/json", (request, response) -> {
             String id = request.params("id").replace(".json", "");
-            ProfileFuture future = null;
-
-            if (NAME.matcher(id).find())
-            {
-                future = requestThread.getProfileByName(id);
-            }
-            else if (UUID_PATTERN.matcher(id).find())
-            {
-                future = requestThread.getProfileByMojangID(id);
-            }
-            else if (REAL_UUID_PATTERN.matcher(id).find())
-            {
-                future = requestThread.getProfileByUUID(id);
-            }
+            ProfileFuture future = getProfile(id);
 
             if (future != null)
             {
@@ -167,37 +154,50 @@ public final class HttpServer
             return "Not acceptable input";
         });
 
-        get("/test/:id", (request, response) -> {
-            String id = request.params("id").replace(".json", "");
-            ProfileFuture future = null;
+        get("/svg/:id", (request, response) -> {
+            String id = request.params("id").replace(".svg", "");
 
-            if (NAME.matcher(id).find())
-            {
-                future = requestThread.getProfileByName(id);
-            }
-            else if (UUID_PATTERN.matcher(id).find())
-            {
-                future = requestThread.getProfileByMojangID(id);
-            }
-            else if (REAL_UUID_PATTERN.matcher(id).find())
-            {
-                future = requestThread.getProfileByUUID(id);
-            }
+            ProfileFuture future = getProfile(id);
 
             if (future != null)
             {
-                while (!future.isDone())
-                {
-                    Thread.sleep(1);
-                }
-                response.type("image/svg+xml");
-                response.header("Content-Encoding", "gzip");
-                return SVGGenerator.convert(skinManager.getBufferedMutated(future.get(), 8, Mutate.HELM));
+                return handleSVG(response, future, Mutate.HELM);
             }
 
             halt(403, "Not acceptable input");
             return "Not acceptable input";
         });
+    }
+
+    private static ProfileFuture getProfile(String id)
+    {
+        ProfileFuture future = null;
+
+        if (NAME.matcher(id).find())
+        {
+            future = requestThread.getProfileByName(id);
+        }
+        else if (UUID_PATTERN.matcher(id).find())
+        {
+            future = requestThread.getProfileByMojangID(id);
+        }
+        else if (REAL_UUID_PATTERN.matcher(id).find())
+        {
+            future = requestThread.getProfileByUUID(id);
+        }
+
+        return future;
+    }
+
+    private static String handleSVG(Response response, ProfileFuture future, Mutate mutate) throws InterruptedException, ExecutionException
+    {
+        while (!future.isDone())
+        {
+            Thread.sleep(1);
+        }
+        response.type("image/svg+xml");
+        response.header("Content-Encoding", "gzip");
+        return SVGGenerator.convert(skinManager.getBufferedMutated(future.get(), 8, mutate));
     }
 
     private static Response handleImage(Response response, String id, int size, Mutate mutate) throws IOException, InterruptedException, ExecutionException
