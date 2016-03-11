@@ -206,7 +206,7 @@ public final class HttpServer
             Thread.sleep(1);
         }
         response.type("image/svg+xml");
-        response.header("Content-Encoding", "gzip");
+//        response.header("Content-Encoding", "gzip");
         return SVGGenerator.convert(skinManager.getBufferedMutated(future.get(), mutate.getSvgScale(), mutate));
     }
 
