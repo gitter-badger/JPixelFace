@@ -1,118 +1,157 @@
 <!DOCTYPE html>
-<!--[if lt IE 7]>      <html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
-<!--[if IE 7]>         <html class="no-js lt-ie9 lt-ie8"> <![endif]-->
-<!--[if IE 8]>         <html class="no-js lt-ie9"> <![endif]-->
-<!--[if gt IE 8]><!--> <html class="no-js"> <!--<![endif]-->
-    <head>
-        <meta charset="utf-8">
-        <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
-        <title>PixelFace</title>
-        <meta name="description" content="">
-        <meta name="viewport" content="width=device-width">
+<!--[if lt IE 7]>
+<html class="no-js lt-ie9 lt-ie8 lt-ie7"> <![endif]-->
+<!--[if IE 7]>
+<html class="no-js lt-ie9 lt-ie8"> <![endif]-->
+<!--[if IE 8]>
+<html class="no-js lt-ie9"> <![endif]-->
+<!--[if gt IE 8]><!-->
+<html class="no-js"> <!--<![endif]-->
+<head>
+    <meta charset="utf-8">
+    <meta http-equiv="X-UA-Compatible" content="IE=edge,chrome=1">
+    <title>PixelFace</title>
+    <meta name="description" content="">
+    <meta name="viewport" content="width=device-width">
 
-        <link rel="stylesheet" href="/css/bootstrap.min.css">
-        <style>
-            body {
-                padding-top: 50px;
-                padding-bottom: 20px;
-            }
-        </style>
-        <link rel="stylesheet" href="/css/bootstrap-theme.min.css">
-        <link rel="stylesheet" href="/css/main.css">
+    <link rel="stylesheet" href="css/bootstrap.min.css">
+    <style>
+        body {
+            padding-top: 50px;
+            padding-bottom: 20px;
+        }
+    </style>
+    <link rel="stylesheet" href="css/bootstrap-theme.min.css">
+    <link rel="stylesheet" href="css/main.css">
 
-        <script src="/js/vendor/modernizr-2.6.2-respond-1.1.0.min.js"></script>
-    </head>
-    <body>
-    <div class="jumbotron">
-      <div class="container">
+    <script src="js/vendor/modernizr-2.6.2-respond-1.1.0.min.js"></script>
+</head>
+<body>
+<div class="jumbotron">
+    <div class="container">
         <h1>PixelFace</h1>
         <p>Something something Minecraft skins</p>
-      </div>
+    </div>
+</div>
+
+<div class="container">
+    <div class="row">
+        <div class="col-6">
+            <h2>Information</h2>
+            <p>
+                PixelFace is a forum avatar service, like <a href="https://gravatar.com/">Gravatar</a> but for
+                Minecraft.
+            </p>
+            <p>
+                For news and announcements follow <a href="https://twitter.com/TehRainbowGuy">@TehRainbowGuy</a> on
+                Twitter.
+            </p>
+            <p>
+                All endpoints support user names, Mojang formatted UUIDs and properly formatted UUIDs.
+            </p>
+            <p>
+                <span class="label label-info">New!</span> All image styles support svg. <code>https://PixelFace.net/helm/[name].svg</code>
+            </p>
+        </div>
+        <div class="col-lg-6">
+            <h2>Avatars</h2>
+            <p>Simply use <code>https://PixelFace.net/avatar/[Name]/[Size]</code></p>
+            <p>
+                <img src="https://PixelFace.net/avatar/MHF_Squid"/>
+                <img src="https://PixelFace.net/avatar/Puremin0rez"/>
+                <img src="https://PixelFace.net/avatar/md_5"/>
+                <img src="https://PixelFace.net/avatar/M_Leon246"/>
+            </p>
+        </div>
+        <div class="col-lg-6">
+            <h2>Helms</h2>
+            <p>Simply use <code>https://PixelFace.net/helm/[Name]/[Size]</code></p>
+            <p>
+                <img src="https://PixelFace.net/helm/MHF_Squid"/>
+                <img src="https://PixelFace.net/helm/Puremin0rez"/>
+                <img src="https://PixelFace.net/helm/md_5"/>
+                <img src="https://PixelFace.net/helm/M_Leon246"/>
+            </p>
+        </div>
+    </div>
+    <div class="row">
+        <div class="col-lg-6">
+            <h2>Torsos</h2>
+            <p>Simply use <code>https://PixelFace.net/torso/[Name]/[Scale]</code></p>
+            <p>Please note that the size for this is x = 18 * scale, y = 20 * scale</p>
+            <p>
+                <img src="https://PixelFace.net/torso/MHF_Squid/3"/>
+                <img src="https://PixelFace.net/torso/Puremin0rez/3"/>
+                <img src="https://PixelFace.net/torso/md_5/3"/>
+                <img src="https://PixelFace.net/torso/M_Leon246/3"/>
+            </p>
+        </div>
+        <div class="col-lg-6">
+            <h2>Busts</h2>
+            <p>Simply use <code>https://PixelFace.net/bust/[Name]/[Size]</code></p>
+            <p>
+                <img src="https://PixelFace.net/bust/MHF_Squid"/>
+                <img src="https://PixelFace.net/bust/Puremin0rez"/>
+                <img src="https://PixelFace.net/bust/md_5"/>
+                <img src="https://PixelFace.net/bust/M_Leon246"/>
+            </p>
+        </div>
     </div>
 
-    <div class="container">
-      <div class="row">
+    <div class="row">
         <div class="col-lg-6">
-          <h2>Avatars</h2>
-          <p>Simply use <code>https://PixelFace.net/avatar/[Name]/[Size]</code></p>
-          <p>
-            <img src="https://PixelFace.net/avatar/MHF_Squid" />
-            <img src="https://PixelFace.net/avatar/Puremin0rez" />
-            <img src="https://PixelFace.net/avatar/md_5" />
-              <img src="https://PixelFace.net/avatar/M_Leon246"/>
-          </p>
-       </div>
-        <div class="col-lg-6">
-          <h2>Helms</h2>
-          <p>Simply use <code>https://PixelFace.net/helm/[Name]/[Size]</code></p>
-          <p>
-            <img src="https://PixelFace.net/helm/MHF_Squid" />
-            <img src="https://PixelFace.net/helm/Puremin0rez" />
-            <img src="https://PixelFace.net/helm/md_5" />
-              <img src="https://PixelFace.net/helm/M_Leon246"/>
-          </p>
-        </div>
-      </div>
-        <div class="row">
-          <div class="col-lg-6">
-          <h2>Torsos</h2>
-          <p>Simply use <code>https://PixelFace.net/torso/[Name]/[Scale]</code></p>
-          <p>Please note that the size for this is x = 18 * scale, y = 20 * scale</p>
-          <p>
-            <img src="https://PixelFace.net/torso/MHF_Squid/3" />
-            <img src="https://PixelFace.net/torso/Puremin0rez/3" />
-            <img src="https://PixelFace.net/torso/md_5/3" />
-              <img src="https://PixelFace.net/torso/M_Leon246/3"/>
-          </p>
+            <h2>Full body</h2>
+            <p>Simply use <code>https://PixelFace.net/body/[Name]/[Scale]</code></p>
+            <p>Please note that the size for this is x = 18 * scale, y = 32 * scale</p>
+            <p>
+                <img src="https://PixelFace.net/body/MHF_Squid/3"/>
+                <img src="https://PixelFace.net/body/Puremin0rez/3"/>
+                <img src="https://PixelFace.net/body/md_5/3"/>
+                <img src="https://PixelFace.net/body/M_Leon246/3"/>
+            </p>
         </div>
         <div class="col-lg-6">
-          <h2>Busts</h2>
-          <p>Simply use <code>https://PixelFace.net/bust/[Name]/[Size]</code></p>
-          <p>
-            <img src="https://PixelFace.net/bust/MHF_Squid" />
-            <img src="https://PixelFace.net/bust/Puremin0rez" />
-            <img src="https://PixelFace.net/bust/md_5" />
-              <img src="https://PixelFace.net/bust/M_Leon246"/>
-          </p>
-         </div>
-      </div>
-
-      <div class="row">
-      <div class="col-lg-6">
-          <h2>Full body</h2>
-          <p>Simply use <code>https://PixelFace.net/body/[Name]/[Scale]</code></p>
-          <p>Please note that the size for this is x = 18 * scale, y = 32 * scale</p>
-          <p>
-            <img src="https://PixelFace.net/body/MHF_Squid/3" />
-            <img src="https://PixelFace.net/body/Puremin0rez/3" />
-            <img src="https://PixelFace.net/body/md_5/3" />
-              <img src="https://PixelFace.net/body/M_Leon246/3"/>
-          </p>
+            <h2>Skins</h2>
+            <p>Simply use <code>https://PixelFace.net/skin/[Name]</code></p>
+            <p>
+                <img src="https://PixelFace.net/skin/MHF_Squid"/>
+                <img src="https://PixelFace.net/skin/Puremin0rez"/>
+                <img src="https://PixelFace.net/skin/md_5"/>
+                <img src="https://PixelFace.net/skin/M_Leon246"/>
+            </p>
         </div>
-        <div class="col-lg-6">
-          <h2>Skins</h2>
-          <p>Simply use <code>https://PixelFace.net/skin/[Name]</code></p>
-          <p>
-              <img src="https://PixelFace.net/skin/MHF_Squid" />
-              <img src="https://PixelFace.net/skin/Puremin0rez" />
-              <img src="https://PixelFace.net/skin/md_5" />
-              <img src="https://PixelFace.net/skin/M_Leon246"/>
-          </p>
-      </div>
-      </div>
-      <hr>
+    </div>
+    <div class="row">
+        <div class="col-lg-12">
+            <h2>Profiles</h2>
+            <p>Simply use <code>https://PixelFace.net/profile/[Name].json</code></p>
+            <p>
+                <pre>
+{
+    name: "TehRainbowGuy",
+    uuid: "13db1d08-e3a8-48be-bbc5-098b0d3eaa9a",
+    mojangUuid: "13db1d08e3a848bebbc5098b0d3eaa9a",
+    skinUrl: "http://textures.minecraft.net/texture/743f3d1ca969dcb783cdab7c1f85f733429bf8bdacb447ef2e9123e7477f",
+    capeUrl: null
+}
+                </pre>
+            </p>
+        </div>
+    </div>
+    <hr>
 
-      <footer>
-        <p>&copy; Benjamin Harrison-Sims 2014</p>
-      </footer>
-    </div> <!-- /container -->
-    <a href="https://github.com/TehRainbowGuy/JPixelFace"><img style="position: absolute; top: 0; right: 0; border: 0;"
-                                                               src="https://camo.githubusercontent.com/38ef81f8aca64bb9a64448d0d70f1308ef5341ab/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f6461726b626c75655f3132313632312e706e67"
-                                                               alt="Fork me on GitHub"
-                                                               data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"></a>
-    <script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script>
-        <script>window.jQuery || document.write('<script src="/js/vendor/jquery-1.10.1.min.js"><\/script>')</script>
+    <footer>
+        <p>&copy; Benjamin Harrison-Sims 2014. We are in no way affiliated with Mojang AB, the creators of Minecraft
+            (Please don't sue me).</p>
+    </footer>
+</div> <!-- /container -->
+<a href="https://github.com/TehRainbowGuy/JPixelFace"><img style="position: absolute; top: 0; right: 0; border: 0;"
+                                                           src="https://camo.githubusercontent.com/38ef81f8aca64bb9a64448d0d70f1308ef5341ab/68747470733a2f2f73332e616d617a6f6e6177732e636f6d2f6769746875622f726962626f6e732f666f726b6d655f72696768745f6461726b626c75655f3132313632312e706e67"
+                                                           alt="Fork me on GitHub"
+                                                           data-canonical-src="https://s3.amazonaws.com/github/ribbons/forkme_right_darkblue_121621.png"></a>
+<script src="https://ajax.googleapis.com/ajax/libs/jquery/1.10.1/jquery.min.js"></script>
+<script>window.jQuery || document.write('<script src="js/vendor/jquery-1.10.1.min.js"><\/script>')</script>
 
-        <script src="/js/vendor/bootstrap.min.js"></script>
-    </body>
+<script src="js/vendor/bootstrap.min.js"></script>
+</body>
 </html>
