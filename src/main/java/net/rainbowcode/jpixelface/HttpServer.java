@@ -3,6 +3,7 @@ package net.rainbowcode.jpixelface;
 import net.rainbowcode.jpixelface.profile.ProfileFuture;
 import net.rainbowcode.jpixelface.profile.ProfileRequestThread;
 import net.rainbowcode.jpixelface.skin.Mutate;
+import net.rainbowcode.jpixelface.svg.SVGGenerator;
 import spark.Response;
 
 import javax.servlet.http.HttpServletResponse;
