@@ -69,7 +69,7 @@ public enum Mutate
                     return bufferedImage;
                 }
             },
-    BUST("/bust/", 8, 512)
+    BUST("/bust/", 8, 512, 16)
             {
                 @Override
                 public BufferedImage act(BufferedImage bufferedImage, int scale)
@@ -81,7 +81,7 @@ public enum Mutate
                     return bufferedImage;
                 }
             },
-    BUST_NOLAYER("/bust-nolayer/", 8, 512)
+    BUST_NOLAYER("/bust-nolayer/", 8, 512, 16)
             {
                 @Override
                 public BufferedImage act(BufferedImage bufferedImage, int scale)
@@ -107,12 +107,22 @@ public enum Mutate
     private final String path;
     private final int minScale;
     private final int maxScale;
+    private final int svgScale;
+
+    Mutate(String path, int minScale, int maxScale, int svgScale)
+    {
+        this.path = path;
+        this.minScale = minScale;
+        this.maxScale = maxScale;
+        this.svgScale = svgScale;
+    }
 
     Mutate(String path, int minScale, int maxScale)
     {
         this.path = path;
         this.minScale = minScale;
         this.maxScale = maxScale;
+        this.svgScale = minScale;
     }
 
     public String getPath()
@@ -131,4 +141,9 @@ public enum Mutate
     }
 
     public abstract BufferedImage act(BufferedImage bufferedImage, int scale);
+
+    public int getSvgScale()
+    {
+        return svgScale;
+    }
 }

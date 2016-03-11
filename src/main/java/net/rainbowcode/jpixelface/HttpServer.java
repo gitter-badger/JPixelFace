@@ -207,7 +207,7 @@ public final class HttpServer
         }
         response.type("image/svg+xml");
         response.header("Content-Encoding", "gzip");
-        return SVGGenerator.convert(skinManager.getBufferedMutated(future.get(), 8, mutate));
+        return SVGGenerator.convert(skinManager.getBufferedMutated(future.get(), mutate.getSvgScale(), mutate));
     }
 
     private static Response handleImage(Response response, String id, int size, Mutate mutate) throws IOException, InterruptedException, ExecutionException
