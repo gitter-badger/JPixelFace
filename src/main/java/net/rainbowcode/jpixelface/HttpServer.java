@@ -97,7 +97,7 @@ public final class HttpServer
 
                 String id = request.params("id").replace(".png", "").replace(".svg", "");
 
-                int size = svg ? 8 : 64;
+                int size = 64;
 
                 if (svg)
                 {
