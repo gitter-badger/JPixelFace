@@ -88,14 +88,37 @@ public final class HttpServer
 
         for (Mutate mutate : Mutate.values())
         {
-            get(mutate.getPath() + ":id", "image/png", (request, response) -> {
-                String id = request.params("id").replace(".png", "");
-                int size = 64;
-
-                Response httpServletResponse = handleImage(response, id, size, mutate);
-                if (httpServletResponse != null)
+            get(mutate.getPath() + ":id", (request, response) -> {
+                boolean svg = false;
+                if (request.params("id").endsWith(".svg"))
                 {
-                    return httpServletResponse.raw();
+                    svg = true;
+                }
+
+                String id = request.params("id").replace(".png", "").replace(".svg", "");
+
+                int size = svg ? 8 : 64;
+
+                if (svg)
+                {
+                    ProfileFuture future = getProfile(id);
+                    if (future == null)
+                    {
+                        halt(403, "Not acceptable input (Not a valid Minecraft name, Mojang UUID or real UUID)");
+                        return "";
+                    }
+                    else
+                    {
+                        return handleSVG(response, future, mutate);
+                    }
+                }
+                else
+                {
+                    Response httpServletResponse = handleImage(response, id, size, mutate);
+                    if (httpServletResponse != null)
+                    {
+                        return httpServletResponse.raw();
+                    }
                 }
 
                 halt(403, "Not acceptable input");
@@ -149,20 +172,6 @@ public final class HttpServer
                     Thread.sleep(1);
                 }
                 return future.get().toJson();
-            }
-
-            halt(403, "Not acceptable input");
-            return "Not acceptable input";
-        });
-
-        get("/svg/:id", (request, response) -> {
-            String id = request.params("id").replace(".svg", "");
-
-            ProfileFuture future = getProfile(id);
-
-            if (future != null)
-            {
-                return handleSVG(response, future, Mutate.HELM);
             }
 
             halt(403, "Not acceptable input");
