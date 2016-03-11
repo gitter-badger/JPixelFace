@@ -31,4 +31,5 @@ Contributing
 I am always looking for help and advice with this project.
 
 If you have code contributions, feel free to open up a pull request.
+
 For anything else, open up a ticket here or ping me on [twitter](https://twitter.com/TehRainbowGuy).
