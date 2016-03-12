@@ -5,6 +5,8 @@ import com.google.gson.JsonElement;
 import com.google.gson.JsonObject;
 import com.google.gson.JsonParser;
 import net.rainbowcode.jpixelface.*;
+import net.rainbowcode.jpixelface.redis.RedisKey;
+import net.rainbowcode.jpixelface.redis.RedisUtils;
 import org.apache.logging.log4j.LogManager;
 import org.apache.logging.log4j.Logger;
 

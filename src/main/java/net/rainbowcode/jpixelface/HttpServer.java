@@ -2,7 +2,9 @@ package net.rainbowcode.jpixelface;
 
 import net.rainbowcode.jpixelface.profile.ProfileFuture;
 import net.rainbowcode.jpixelface.profile.ProfileRequestThread;
+import net.rainbowcode.jpixelface.redis.RedisUtils;
 import net.rainbowcode.jpixelface.skin.Mutate;
+import net.rainbowcode.jpixelface.skin.SkinManager;
 import net.rainbowcode.jpixelface.svg.SVGGenerator;
 import spark.Response;
 

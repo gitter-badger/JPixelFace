@@ -1,6 +1,5 @@
 package net.rainbowcode.jpixelface.skin;
 
-import net.rainbowcode.jpixelface.SkinManager;
 import org.imgscalr.Scalr;
 
 import java.awt.image.BufferedImage;

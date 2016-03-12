@@ -1,4 +1,4 @@
-package net.rainbowcode.jpixelface;
+package net.rainbowcode.jpixelface.redis;
 
 public enum RedisKey
 {

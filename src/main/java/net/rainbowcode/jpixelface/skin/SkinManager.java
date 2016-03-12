@@ -1,6 +1,9 @@
-package net.rainbowcode.jpixelface;
+package net.rainbowcode.jpixelface.skin;
 
+import net.rainbowcode.jpixelface.HttpUtil;
 import net.rainbowcode.jpixelface.profile.Profile;
+import net.rainbowcode.jpixelface.redis.RedisKey;
+import net.rainbowcode.jpixelface.redis.RedisUtils;
 import net.rainbowcode.jpixelface.skin.Mutate;
 import org.apache.commons.io.IOUtils;
 import org.apache.logging.log4j.LogManager;
