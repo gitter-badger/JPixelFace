@@ -37,71 +37,48 @@ public class SkinManager
         }
     }
 
-    public byte[] getSkinFromProfile(Profile profile)
+    public byte[] getSkinFromProfile(Profile profile) throws IOException
     {
-        byte[] skin = null;
-        try
+        byte[] skin;
+        if (profile.getSkinUrl() != null)
         {
-            if (profile.getUuid() == null)
+            byte[] key = RedisKey.SKIN.buildByteKey(profile.getUuid().toString());
+            if (RedisUtils.exists(key))
             {
-                skin = defaultSkin;
+                skin = RedisUtils.getAsBytes(key);
             }
             else
             {
-                if (profile.getSkinUrl() != null)
-                {
-                    byte[] key = RedisKey.SKIN.buildByteKey(profile.getUuid().toString());
-                    if (RedisUtils.exists(key))
-                    {
-                        skin = RedisUtils.getAsBytes(key);
-                    }
-                    else
-                    {
-                        skin = HttpUtil.getAsBytes(profile.getSkinUrl());
-                        RedisUtils.setAndExpire(key, skin, 86400);
-                    }
-
-                }
-                else
-                {
-                    skin = defaultSkin;
-                }
+                skin = HttpUtil.getAsBytes(profile.getSkinUrl());
+                RedisUtils.setAndExpire(key, skin, 86400);
             }
+
         }
-        catch (IOException e)
+        else
         {
-            e.printStackTrace();
+            skin = defaultSkin;
         }
 
         return skin;
     }
 
-    public byte[] getMutated(Profile profile, int size, Mutate mutate)
+    public byte[] getMutated(Profile profile, int size, Mutate mutate) throws IOException
     {
-        byte[] newSkin;
-        try
+        byte[] newSkin = getSkinFromProfile(profile);
+        if (!mutate.equals(Mutate.NONE))
         {
-            newSkin = getSkinFromProfile(profile);
-            if (!mutate.equals(Mutate.NONE))
-            {
-                InputStream in = new ByteArrayInputStream(newSkin);
-                BufferedImage bImageFromConvert = ImageIO.read(in);
-                in.close();
+            InputStream in = new ByteArrayInputStream(newSkin);
+            BufferedImage bImageFromConvert = ImageIO.read(in);
+            in.close();
 
-                bImageFromConvert = mutate.act(bImageFromConvert, size);
+            bImageFromConvert = mutate.act(bImageFromConvert, size);
 
-                ByteArrayOutputStream baos = new ByteArrayOutputStream();
-                ImageIO.write(bImageFromConvert, "png", baos);
-                baos.flush();
-                newSkin = baos.toByteArray();
-                baos.close();
-                bImageFromConvert.flush();
-            }
-        }
-        catch (IOException e)
-        {
-            e.printStackTrace();
-            return null;
+            ByteArrayOutputStream baos = new ByteArrayOutputStream();
+            ImageIO.write(bImageFromConvert, "png", baos);
+            baos.flush();
+            newSkin = baos.toByteArray();
+            baos.close();
+            bImageFromConvert.flush();
         }
 
         return newSkin;

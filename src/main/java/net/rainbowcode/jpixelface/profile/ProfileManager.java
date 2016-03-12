@@ -1,10 +1,8 @@
 package net.rainbowcode.jpixelface.profile;
 
-import com.google.gson.JsonArray;
-import com.google.gson.JsonElement;
-import com.google.gson.JsonObject;
-import com.google.gson.JsonParser;
+import com.google.gson.*;
 import net.rainbowcode.jpixelface.*;
+import net.rainbowcode.jpixelface.exceptions.MojangException;
 import net.rainbowcode.jpixelface.redis.RedisKey;
 import net.rainbowcode.jpixelface.redis.RedisUtils;
 import org.apache.logging.log4j.LogManager;
@@ -47,12 +45,8 @@ public class ProfileManager
                 profile.getUuid().toString(), 86400);
     }
 
-    public static Profile getProfileFromUUID(UUID uuid)
+    public static Profile getProfileFromUUID(UUID uuid) throws MojangException, IOException
     {
-        if (uuid == null)
-        {
-            return new Profile(null, null, null, null);
-        }
         String key = RedisKey.PROFILE_UUID.buildKey(uuid.toString());
         if (RedisUtils.exists(key))
         {
@@ -60,57 +54,48 @@ public class ProfileManager
         }
         else
         {
-            try
+            String url = "https://sessionserver.mojang.com/session/minecraft/profile/"
+                    + uuid.toString().replaceAll("-", "");
+
+            getTicket();
+
+            HttpStringResponse response = HttpUtil.getAsString(url);
+
+            String string = response.getResponse();
+            if (response.getCode() != 200)
             {
-                String url = "https://sessionserver.mojang.com/session/minecraft/profile/"
-                        + uuid.toString().replaceAll("-", "");
-
-                getTicket();
-
-                HttpStringResponse response = HttpUtil.getAsString(url);
-
-                String string = response.getResponse();
-                if (response.getCode() != 200)
-                {
-                    return new Profile(null, uuid, null, null);
-                }
-                else
-                {
-                    JsonParser parser = new JsonParser();
-                    JsonObject object = parser.parse(string).getAsJsonObject();
-                    JsonArray properties = object.getAsJsonArray("properties");
-                    String name = object.getAsJsonPrimitive("name")
-                            .getAsString();
-                    JsonObject textures = properties.get(0).getAsJsonObject();
-                    String value = textures.get("value").getAsString();
-                    String decoded = new String(Base64.getDecoder().decode(
-                            value), "UTF-8");
-                    JsonObject parse = parser.parse(decoded).getAsJsonObject();
-                    JsonObject texturesOb = parse.getAsJsonObject("textures");
-                    final String[] skinUrl = {null};
-                    final String[] capeUrl = {null};
-                    if (texturesOb != null)
-                    {
-                        resolve(() -> texturesOb.getAsJsonObject("SKIN").getAsJsonPrimitive("url").getAsString()).ifPresent(x -> skinUrl[0] = x);
-                        resolve(() -> texturesOb.getAsJsonObject("CAPE").getAsJsonPrimitive("url").getAsString()).ifPresent(x -> capeUrl[0] = x);
-                    }
-                    Profile profile = new Profile(name, uuid, skinUrl[0], capeUrl[0]);
-                    System.out.println(profile);
-                    commitProfile(profile);
-                    return profile;
-
-                }
+                throw new MojangException(url, response.getCode());
             }
-            catch (IOException e)
+            else
             {
-                e.printStackTrace();
+                JsonParser parser = new JsonParser();
+                JsonObject object = parser.parse(string).getAsJsonObject();
+                JsonArray properties = object.getAsJsonArray("properties");
+                String name = object.getAsJsonPrimitive("name")
+                        .getAsString();
+                JsonObject textures = properties.get(0).getAsJsonObject();
+                String value = textures.get("value").getAsString();
+                String decoded = new String(Base64.getDecoder().decode(
+                        value), "UTF-8");
+                JsonObject parse = parser.parse(decoded).getAsJsonObject();
+                JsonObject texturesOb = parse.getAsJsonObject("textures");
+                final String[] skinUrl = {null};
+                final String[] capeUrl = {null};
+                if (texturesOb != null)
+                {
+                    resolve(() -> texturesOb.getAsJsonObject("SKIN").getAsJsonPrimitive("url").getAsString()).ifPresent(x -> skinUrl[0] = x);
+                    resolve(() -> texturesOb.getAsJsonObject("CAPE").getAsJsonPrimitive("url").getAsString()).ifPresent(x -> capeUrl[0] = x);
+                }
+                Profile profile = new Profile(name, uuid, skinUrl[0], capeUrl[0]);
+                commitProfile(profile);
+                return profile;
+
             }
+
         }
-        LOGGER.error("Profile from uuid failed hard!");
-        return new Profile(null, null, null, null);
     }
 
-    private static UUID uuidFromName(String name)
+    private static UUID uuidFromName(String name) throws MojangException, IOException, JsonParseException
     {
         name = name.toLowerCase();
         String key = RedisKey.UUID_NAME.buildKey(name);
@@ -120,47 +105,28 @@ public class ProfileManager
         }
         else
         {
-            try
+            getTicket();
+            String path = "https://api.mojang.com/users/profiles/minecraft/" + name;
+            HttpStringResponse response = HttpUtil.getAsString(path);
+            String string = response.getResponse();
+            JsonParser parser = new JsonParser();
+            if (response.getCode() != 200)
             {
-                getTicket();
-
-                HttpStringResponse response = HttpUtil
-                        .getAsString("https://api.mojang.com/users/profiles/minecraft/"
-                                + name);
-                String string = response.getResponse();
-                JsonParser parser = new JsonParser();
-                if (response.getCode() != 200)
-                {
-                    return null;
-                }
-                else
-                {
-                    JsonElement parse = parser.parse(string);
-                    if (parse != null)
-                    {
-                        JsonObject object = parse.getAsJsonObject();
-                        UUID uuid = UUID.fromString(StringUtil.addDashes(object
-                                .getAsJsonPrimitive("id").getAsString()));
-                        RedisUtils.setAndExpire(key, uuid.toString(), 86400);
-                        return uuid;
-                    }
-                    else
-                    {
-                        return null;
-                    }
-                }
+                throw new MojangException(path, response.getCode());
             }
-            catch (IOException e)
+            else
             {
-                e.printStackTrace();
+                JsonElement parse = parser.parse(string);
+                JsonObject object = parse.getAsJsonObject();
+                UUID uuid = UUID.fromString(StringUtil.addDashes(object
+                        .getAsJsonPrimitive("id").getAsString()));
+                RedisUtils.setAndExpire(key, uuid.toString(), 86400);
+                return uuid;
             }
         }
-
-        LOGGER.warn("UUID To profile failed hard");
-        return null;
     }
 
-    public static Profile getProfileFromName(String name)
+    public static Profile getProfileFromName(String name) throws MojangException, IOException, JsonParseException
     {
         name = name.toLowerCase();
         Profile profile = getProfileFromUUID(uuidFromName(name));

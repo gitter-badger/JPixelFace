@@ -43,8 +43,7 @@ public class MutateRoute extends Route
             }
             else
             {
-                Response httpServletResponse = server.handleImage(response, future, size, mutate);
-                return httpServletResponse.raw();
+                return server.handleImage(response, future, size, mutate).raw();
             }
         });
 

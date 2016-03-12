@@ -1,5 +1,7 @@
 package net.rainbowcode.jpixelface.profile;
 
+import net.rainbowcode.jpixelface.exceptions.MojangException;
+
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.Future;
 import java.util.concurrent.TimeUnit;
@@ -11,6 +13,7 @@ public class ProfileFuture implements Future<Profile>
     private Profile profile = null;
     private final ProfileType type;
     private final String id;
+    private Exception exception = null;
 
     public ProfileFuture(ProfileType type, String id)
     {
@@ -66,5 +69,43 @@ public class ProfileFuture implements Future<Profile>
     public String getId()
     {
         return id;
+    }
+
+    public Exception getException()
+    {
+        return exception;
+    }
+
+    public void setException(Exception exception)
+    {
+        this.exception = exception;
+    }
+
+    public void await() throws Exception
+    {
+        while (!isDone())
+        {
+            try
+            {
+                Thread.sleep(1);
+            }
+            catch (InterruptedException e)
+            {
+                e.printStackTrace();
+            }
+        }
+
+        if (getException() != null)
+        {
+            if (getException() instanceof MojangException)
+            {
+                MojangException mojangException = (MojangException) getException();
+                if (mojangException.getCode() == 204) // Handle people without profile
+                {
+                    return;
+                }
+            }
+            throw getException();
+        }
     }
 }

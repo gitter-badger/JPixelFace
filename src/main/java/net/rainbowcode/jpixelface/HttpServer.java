@@ -1,6 +1,8 @@
 package net.rainbowcode.jpixelface;
 
+import com.google.gson.JsonParseException;
 import net.rainbowcode.jpixelface.exceptions.InvalidIdException;
+import net.rainbowcode.jpixelface.exceptions.MojangException;
 import net.rainbowcode.jpixelface.exceptions.ScaleOutOfBoundsException;
 import net.rainbowcode.jpixelface.profile.ProfileFuture;
 import net.rainbowcode.jpixelface.profile.ProfileRequestThread;
@@ -109,6 +111,8 @@ public final class HttpServer
         new ProfileRoute().init(this);
         log.info("Initialised profile route");
 
+        // Client errors
+
         exception(NumberFormatException.class, (e, request, response) -> {
             response.status(Errors.NUMBER_FORMAT_EXCEPTION.getCode());
             response.body(Errors.NUMBER_FORMAT_EXCEPTION.getText());
@@ -123,6 +127,25 @@ public final class HttpServer
             ScaleOutOfBoundsException exception = (ScaleOutOfBoundsException) e;
             response.status(Errors.SIZE_TOO_BIG_OR_TOO_SMALL.getCode());
             response.body(String.format(Errors.SIZE_TOO_BIG_OR_TOO_SMALL.getText(), exception.getMinScale(), exception.getMaxScale()));
+        });
+
+        //Server errors
+        exception(MojangException.class, (e, request, response) -> {
+            MojangException mojangException = (MojangException) e;
+            response.status(Errors.MOJANG.getCode());
+            response.body(String.format(Errors.MOJANG.getText(), mojangException.getCode(), mojangException.getPath()));
+        });
+
+        exception(IOException.class, (e, request, response) -> {
+            response.status(Errors.INTERNAL.getCode());
+            response.body(Errors.INTERNAL.getText());
+            e.printStackTrace();
+        });
+
+        exception(JsonParseException.class, (e, request, response) -> {
+            response.status(Errors.INTERNAL.getCode());
+            response.body(Errors.INTERNAL.getText());
+            e.printStackTrace();
         });
     }
 
@@ -158,33 +181,41 @@ public final class HttpServer
         throw new InvalidIdException();
     }
 
-    public String handleSVG(Response response, ProfileFuture future, Mutate mutate) throws InterruptedException, ExecutionException
+    public String handleSVG(Response response, ProfileFuture future, Mutate mutate) throws Exception
     {
-        while (!future.isDone())
+        future.await();
+        if (future.getException() != null && future.getException() instanceof MojangException)
         {
-            Thread.sleep(1);
+            MojangException mojangException = (MojangException) future.getException();
+            if (mojangException.getCode() == 204) // Handle people without profile
+            {
+                response.redirect(mutate.getPath() + "MHF_Steve.svg");
+                return "";
+            }
         }
+
         response.type("image/svg+xml");
         return SVGGenerator.convert(skinManager.getBufferedMutated(future.get(), mutate.getSvgScale(), mutate));
     }
 
-    public Response handleImage(Response response, ProfileFuture profile, int size, Mutate mutate) throws IOException, InterruptedException, ExecutionException, InvalidIdException
+    public Response handleImage(Response response, ProfileFuture future, int size, Mutate mutate) throws Exception
     {
-
-        if (profile == null)
-        {
-            throw new InvalidIdException();
-        }
 
         response.type("image/png");
         HttpServletResponse raw = response.raw();
 
-        while (!profile.isDone())
+        future.await();
+        if (future.getException() != null && future.getException() instanceof MojangException)
         {
-            Thread.sleep(1);
+            MojangException mojangException = (MojangException) future.getException();
+            if (mojangException.getCode() == 204) // Handle people without profile
+            {
+                response.redirect(mutate.getPath() + "MHF_Steve" + "/" + size + ".png");
+                return response;
+            }
         }
 
-        raw.getOutputStream().write(skinManager.getMutated(profile.get(), size, mutate));
+        raw.getOutputStream().write(skinManager.getMutated(future.get(), size, mutate));
         raw.getOutputStream().flush();
         raw.getOutputStream().close();
         return response;

@@ -28,6 +28,14 @@ public class Profile
         this.capeUrl = ifNotNullGetAsString(object, "capeUrl");
     }
 
+    public Profile()
+    {
+        uuid = null;
+        name = null;
+        skinUrl = null;
+        capeUrl = null;
+    }
+
     private String ifNotNullGetAsString(JsonObject object, String string)
     {
         JsonElement jsonElement = object.get(string);
