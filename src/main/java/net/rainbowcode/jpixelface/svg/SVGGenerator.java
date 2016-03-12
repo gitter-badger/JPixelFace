@@ -21,6 +21,7 @@ public class SVGGenerator
                     int blue = color & 0xff;
                     int green = (color & 0xff00) >> 8;
                     int red = (color & 0xff0000) >> 16;
+                    int alpha = (color & 0xff000000) >>> 24;
 
                     // Check nearby pixels to see if they are the same.
                     int width = 1;
@@ -47,7 +48,10 @@ public class SVGGenerator
                         }
                     }
 
-                    document.addElement(new SVGRect(x, y, width, height, red, green, blue));
+                    if (alpha == 255)
+                    {
+                        document.addElement(new SVGRect(x, y, width, height, red, green, blue));
+                    }
                     visited[x][y] = true;
                 }
             }
