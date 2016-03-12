@@ -1,11 +1,17 @@
 package net.rainbowcode.jpixelface;
 
+import net.rainbowcode.jpixelface.exceptions.InvalidIdException;
+import net.rainbowcode.jpixelface.exceptions.ScaleOutOfBoundsException;
 import net.rainbowcode.jpixelface.profile.ProfileFuture;
 import net.rainbowcode.jpixelface.profile.ProfileRequestThread;
 import net.rainbowcode.jpixelface.redis.RedisUtils;
+import net.rainbowcode.jpixelface.routes.MutateRoute;
+import net.rainbowcode.jpixelface.routes.ProfileRoute;
 import net.rainbowcode.jpixelface.skin.Mutate;
 import net.rainbowcode.jpixelface.skin.SkinManager;
 import net.rainbowcode.jpixelface.svg.SVGGenerator;
+import org.apache.logging.log4j.LogManager;
+import org.apache.logging.log4j.Logger;
 import spark.Response;
 
 import javax.servlet.http.HttpServletResponse;
@@ -51,13 +57,18 @@ public final class HttpServer
     private static final Pattern NAME = Pattern.compile("^[A-Za-z0-9_]{2,16}$");
     private static final Pattern UUID_PATTERN = Pattern.compile("^[0-9a-f]{8}[0-9a-f]{4}[1-5][0-9a-f]{3}[89ab][0-9a-f]{3}[0-9a-f]{12}$");
     private static final Pattern REAL_UUID_PATTERN = Pattern.compile("^[0-9a-f]{8}-[0-9a-f]{4}-[1-5][0-9a-f]{3}-[89ab][0-9a-f]{3}-[0-9a-f]{12}$");
-    public static SkinManager skinManager = new SkinManager();
-    public static ProfileRequestThread requestThread = new ProfileRequestThread();
+    public SkinManager skinManager = new SkinManager();
+    public ProfileRequestThread requestThread = new ProfileRequestThread();
+    private Logger log = LogManager.getLogger("HttpServer");
 
-    public static void main(String[] args) throws Exception
+    public HttpServer()
     {
-        tickCounter.start();
+        log.info("Starting profile request thread.");
         requestThread.start();
+    }
+
+    public void init()
+    {
         staticFileLocation("/public");
         port(PORT);
 
@@ -90,98 +101,39 @@ public final class HttpServer
 
         for (Mutate mutate : Mutate.values())
         {
-            get(mutate.getPath() + ":id", (request, response) -> {
-                boolean svg = false;
-                if (request.params("id").endsWith(".svg"))
-                {
-                    svg = true;
-                }
-
-                String id = request.params("id").replace(".png", "").replace(".svg", "");
-
-                int size = 64;
-
-                if (svg)
-                {
-                    ProfileFuture future = getProfile(id);
-                    if (future == null)
-                    {
-                        halt(403, "Not acceptable input (Not a valid Minecraft name, Mojang UUID or real UUID)");
-                        return "";
-                    }
-                    else
-                    {
-                        return handleSVG(response, future, mutate);
-                    }
-                }
-                else
-                {
-                    Response httpServletResponse = handleImage(response, id, size, mutate);
-                    if (httpServletResponse != null)
-                    {
-                        return httpServletResponse.raw();
-                    }
-                }
-
-                halt(403, "Not acceptable input");
-                return "Not acceptable input";
-            });
-
-            get(mutate.getPath() + ":id/:size", "image/png", (request, response) -> {
-                String id = request.params("id").replace(".png", "");
-                int size = -1;
-
-                try
-                {
-                    size = Integer.parseInt(request.params("size").replace(".png", ""));
-                }
-                catch (NumberFormatException e)
-                {
-                    halt(403, "Not acceptable input: Size input is not a number");
-                    return "Not acceptable input: Size input is not a number";
-                }
-
-                int minScale = mutate.getMinScale();
-                int maxScale = mutate.getMaxScale();
-
-                if (size > maxScale || size < minScale)
-                {
-                    halt(403, "Not acceptable input: Scale out of bounds (" + minScale + " - " + maxScale + ")");
-                    return "Not acceptable input: Scale out of bounds (" + minScale + " - " + maxScale + ")";
-                }
-
-                Response httpServletResponse = handleImage(response, id, size, mutate);
-
-                if (httpServletResponse != null)
-                {
-                    return httpServletResponse.raw();
-                }
-
-                halt(403, "Not acceptable input (Not a valid Minecraft name, Mojang UUID or real UUID)");
-                return "Not acceptable input (Not a valid Minecraft name, Mojang UUID or real UUID)";
-            });
+            MutateRoute mutateRoute = new MutateRoute(mutate);
+            mutateRoute.init(this);
+            log.info("Initialised route for mutator: " + mutate.name());
         }
 
+        new ProfileRoute().init(this);
+        log.info("Initialised profile route");
 
-        get("/profile/:id", "application/json", (request, response) -> {
-            String id = request.params("id").replace(".json", "");
-            ProfileFuture future = getProfile(id);
+        exception(NumberFormatException.class, (e, request, response) -> {
+            response.status(Errors.NUMBER_FORMAT_EXCEPTION.getCode());
+            response.body(Errors.NUMBER_FORMAT_EXCEPTION.getText());
+        });
 
-            if (future != null)
-            {
-                while (!future.isDone())
-                {
-                    Thread.sleep(1);
-                }
-                return future.get().toJson();
-            }
+        exception(InvalidIdException.class, (e, request, response) -> {
+            response.status(Errors.ID_NOT_VALID.getCode());
+            response.body(Errors.ID_NOT_VALID.getText());
+        });
 
-            halt(403, "Not acceptable input");
-            return "Not acceptable input";
+        exception(ScaleOutOfBoundsException.class, (e, request, response) -> {
+            ScaleOutOfBoundsException exception = (ScaleOutOfBoundsException) e;
+            response.status(Errors.SIZE_TOO_BIG_OR_TOO_SMALL.getCode());
+            response.body(String.format(Errors.SIZE_TOO_BIG_OR_TOO_SMALL.getText(), exception.getMinScale(), exception.getMaxScale()));
         });
     }
 
-    private static ProfileFuture getProfile(String id)
+    public static void main(String[] args) throws Exception
+    {
+        tickCounter.start();
+        HttpServer server = new HttpServer();
+        server.init();
+    }
+
+    public ProfileFuture getProfile(String id) throws InvalidIdException
     {
         ProfileFuture future = null;
 
@@ -198,49 +150,41 @@ public final class HttpServer
             future = requestThread.getProfileByUUID(id);
         }
 
-        return future;
+        if (future != null)
+        {
+            return future;
+        }
+
+        throw new InvalidIdException();
     }
 
-    private static String handleSVG(Response response, ProfileFuture future, Mutate mutate) throws InterruptedException, ExecutionException
+    public String handleSVG(Response response, ProfileFuture future, Mutate mutate) throws InterruptedException, ExecutionException
     {
         while (!future.isDone())
         {
             Thread.sleep(1);
         }
         response.type("image/svg+xml");
-//        response.header("Content-Encoding", "gzip");
         return SVGGenerator.convert(skinManager.getBufferedMutated(future.get(), mutate.getSvgScale(), mutate));
     }
 
-    private static Response handleImage(Response response, String id, int size, Mutate mutate) throws IOException, InterruptedException, ExecutionException
+    public Response handleImage(Response response, ProfileFuture profile, int size, Mutate mutate) throws IOException, InterruptedException, ExecutionException, InvalidIdException
     {
 
-        ProfileFuture future;
-        if (NAME.matcher(id).find())
+        if (profile == null)
         {
-            future = requestThread.getProfileByName(id);
+            throw new InvalidIdException();
         }
-        else if (UUID_PATTERN.matcher(id).find())
-        {
-            future = requestThread.getProfileByMojangID(id);
-        }
-        else if (REAL_UUID_PATTERN.matcher(id).find())
-        {
-            future = requestThread.getProfileByUUID(id);
-        }
-        else
-        {
-            response.status(403);
-            response.body("Not a username, uuid or Mojang id.");
-            return response;
-        }
+
         response.type("image/png");
         HttpServletResponse raw = response.raw();
-        while (!future.isDone())
+
+        while (!profile.isDone())
         {
             Thread.sleep(1);
         }
-        raw.getOutputStream().write(skinManager.getMutated(future.get(), size, mutate));
+
+        raw.getOutputStream().write(skinManager.getMutated(profile.get(), size, mutate));
         raw.getOutputStream().flush();
         raw.getOutputStream().close();
         return response;
