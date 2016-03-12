@@ -23,7 +23,7 @@ To run manually, you must have a pre set up redis server.
 Set `REDIS_PORT_6379_TCP_ADDR` to your redis servers address and run. Example below.
 ```
 REDIS_PORT_6379_TCP_ADDR="127.0.0.1"
-java -Xmx1G -Xms1G -XX:+UseG1GC -jar /path/to/JPixelFace-1.0-SNAPSHOT.jar
+java -Xmx1G -Xms1G -XX:+UseG1GC -jar /path/to/JPixelFace-1.1-SNAPSHOT.jar
 ```
 
 Contributing
