@@ -26,6 +26,7 @@ public class SVGGenerator
                     // Check nearby pixels to see if they are the same.
                     int width = 1;
                     int height = 1;
+                    boolean escape = false;
                     for (int x2 = x + 1; x2 < image.getWidth(); x2++)
                     {
                         for (int y2 = y; y2 < image.getHeight(); y2++)
@@ -38,11 +39,11 @@ public class SVGGenerator
                             }
                             else
                             {
+                                escape = true;
                                 break;
                             }
                         }
-
-                        if (image.getRGB(x2, y) != color)
+                        if (escape)
                         {
                             break;
                         }
