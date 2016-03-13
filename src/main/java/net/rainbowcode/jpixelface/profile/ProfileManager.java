@@ -129,12 +129,7 @@ public class ProfileManager
     public static Profile getProfileFromName(String name) throws MojangException, IOException, JsonParseException
     {
         name = name.toLowerCase();
-        Profile profile = getProfileFromUUID(uuidFromName(name));
-        if (profile.getName() == null)
-        {
-            profile = new Profile(name, null, null, null);
-        }
-        return profile;
+        return getProfileFromUUID(uuidFromName(name));
     }
 
     /**
