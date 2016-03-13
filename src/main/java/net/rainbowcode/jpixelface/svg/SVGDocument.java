@@ -26,8 +26,7 @@ public class SVGDocument
     {
         String retval = header;
         retval += elements.stream()
-                // Sort by size
-                .sorted((o1, o2) -> (o2.getWidth() + o2.getHeight()) - (o1.getWidth() + o1.getHeight())).map(SVGRect::toString)
+                .map(SVGRect::toString)
                 .collect(Collectors.joining());
         retval += footer;
         return retval;
